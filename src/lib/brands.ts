@@ -49,6 +49,27 @@ const WORDS: Record<string, string> = {
   فطور: "breakfast",
 };
 
+/**
+ * A spoken question ("وين أقدر آكل برجر قريب مني") is not a Places query; the
+ * dish or brand inside it is. These carry no search signal in either language.
+ */
+const FILLER = new Set(
+  [
+    "وين","فين","اين","أين","ابي","أبي","ابغى","أبغى","شو","ايش","إيش","وش","في","فيه",
+    "قريب","قريبه","قريبة","مني","منى","هنا","اقرب","أقرب","من","على","عن","لو","سمحت",
+    "ممكن","احسن","أحسن","افضل","أفضل","اكل","آكل","اروح","أروح","اقدر","أقدر","انا","أنا",
+    "where","can","i","we","eat","get","go","find","near","nearby","me","around","here",
+    "best","good","great","a","an","the","is","are","there","any","some","to","for","of",
+    "what","whats","which","show","tell","want","looking","something","place","places","spot","spots",
+  ].map(normaliseName),
+);
+
+/** Keeps the words that could name a brand, dish or cuisine. */
+function stripFiller(words: string[]): string[] {
+  const kept = words.filter((w) => !FILLER.has(normaliseName(w)));
+  return kept.length ? kept : words;
+}
+
 export type NormalisedQuery = {
   /** What we send to Places. */
   query: string;
@@ -61,7 +82,9 @@ export function normaliseQuery(raw: string): NormalisedQuery {
   const brand = LOOKUP.get(normaliseName(trimmed));
   if (brand) return { query: brand, brand };
 
-  const words = trimmed.split(/\s+/);
+  // Short queries are already search terms; long ones are usually questions.
+  const all = trimmed.split(/\s+/).map((w) => w.replace(/[؟?!.,،]+$/, ""));
+  const words = all.length > 3 ? stripFiller(all) : all;
   const mapped = words.map((w) => LOOKUP.get(normaliseName(w)) ?? WORDS[w] ?? w);
   const hitBrand = words
     .map((w) => LOOKUP.get(normaliseName(w)))

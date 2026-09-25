@@ -160,6 +160,25 @@ export default function WainApp() {
     }
   }, []);
 
+  /** Places around the user for a free-text question, without touching the UI. */
+  const searchFor = useCallback(
+    async (text: string): Promise<SearchResult[]> => {
+      try {
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: text, ...origin }),
+        });
+        if (!res.ok) return [];
+        const data = (await res.json()) as { results: SearchResult[] };
+        return data.results;
+      } catch {
+        return [];
+      }
+    },
+    [origin],
+  );
+
   const runSearch = useCallback(
     async (text: string) => {
       if (!text.trim()) return;
@@ -436,13 +455,26 @@ export default function WainApp() {
     const next = [...messages, { role: "user" as const, content: text }];
     setMessages(next);
     setInput("");
+
+    // With no place open, the question itself is the search: answering from
+    // whatever list happened to be on screen ignores Google entirely.
+    let around = results;
+    if (!active) {
+      const found = await searchFor(text);
+      if (found.length) {
+        around = found;
+        setResults(found);
+        setHighlighted(found[0].id);
+      }
+    }
+
     const data = await call<{ reply: string; dishes: MenuItem[]; register: Register }>(
       "/api/chat",
       {
         message: text,
         placeId: active?.source === "wain" ? active.id : undefined,
         history: messages,
-        nearby: active?.source === "wain" ? undefined : active ? [active, ...results] : results,
+        nearby: active?.source === "wain" ? undefined : active ? [active, ...results] : around,
         focusId: active?.source === "google" ? active.id : undefined,
         // A menu read off the place's own pages is grounding the server
         // cannot look up itself.

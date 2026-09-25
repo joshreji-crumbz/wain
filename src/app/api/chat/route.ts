@@ -59,16 +59,19 @@ export async function POST(request: Request) {
           ? `The user is looking at ${focused.name_en}, which has no menu data. Answer about that place unless they ask for somewhere else.\n\n`
           : "No single place is selected, so recommend from the list below and say how far away each is.\n\n"
       }NEARBY PLACES (the only source of truth, JSON):\n${JSON.stringify(
-        (nearby ?? []).slice(0, 12).map((r) => ({
-          name_en: r.name_en,
-          name_ar: r.name_ar,
-          address: r.address,
-          distance_m: r.distance_m,
-          rating: r.rating,
-          open_now: r.open_now,
-          menu: r.seed?.menu ?? [],
-          has_menu: !!r.seed,
-        })),
+        [...(nearby ?? [])]
+          .sort((a, b) => (a.distance_m ?? Infinity) - (b.distance_m ?? Infinity))
+          .slice(0, 12)
+          .map((r) => ({
+            name_en: r.name_en,
+            name_ar: r.name_ar,
+            address: r.address,
+            distance_m: r.distance_m,
+            rating: r.rating,
+            open_now: r.open_now,
+            menu: r.seed?.menu ?? [],
+            has_menu: !!r.seed,
+          })),
       )}\n\nHard rules:\n- Never invent a place, a dish, a price or an opening time.\n- For any place with "has_menu": false you have no menu at all. Do not name a dish, a price, a speciality or "what they're known for" for it, and do not guess from its name or cuisine. Say you don't have their menu yet, in the user's own register, and offer what you do have (distance, rating, open now, directions).\n- Leave "dish_ids" empty unless the dish appears verbatim in one of the menus above.`;
 
   const result = await askJson<ChatResult>({
