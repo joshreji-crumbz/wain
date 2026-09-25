@@ -9,7 +9,8 @@ import HomeScreen, { type PhotoOutcome } from "./HomeScreen";
 import PlacePage, { type Enrichment, type RankedPost, type Saw } from "./PlacePage";
 import type { BrandProfile } from "@/lib/creators";
 import ReelSheet from "./ReelSheet";
-import { Spinner } from "./ui";
+import { Spinner, names } from "./ui";
+import { type Key, useLang } from "@/lib/i18n";
 import { useSpeech } from "@/lib/speech";
 import type {
   ChatMessage,
@@ -56,6 +57,7 @@ function sawFor(
 }
 
 export default function WainApp() {
+  const { t, lang, setLang } = useLang();
   const [tab, setTab] = useState<Tab>("home");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export default function WainApp() {
   // Location
   const [lat, setLat] = useState(String(DEFAULT_ORIGIN.lat));
   const [lng, setLng] = useState(String(DEFAULT_ORIGIN.lng));
-  const [gpsStatus, setGpsStatus] = useState("default location (Al Maryah)");
+  const [gpsStatus, setGpsStatus] = useState<Key>("gps.default");
   const [showManualGps, setShowManualGps] = useState(false);
   const manualGps = useRef(false);
   const origin = useMemo(
@@ -130,11 +132,11 @@ export default function WainApp() {
         if (manualGps.current) return;
         setLat(pos.coords.latitude.toFixed(5));
         setLng(pos.coords.longitude.toFixed(5));
-        setGpsStatus("using your GPS");
+        setGpsStatus("gps.using");
       },
       () => {
         if (manualGps.current) return;
-        setGpsStatus("GPS unavailable, using Al Maryah");
+        setGpsStatus("gps.unavailable");
       },
       { enableHighAccuracy: true, timeout: 8000 },
     );
@@ -191,7 +193,7 @@ export default function WainApp() {
         brand: string | null;
         normalised: string;
         google_error: string | null;
-      }>("/api/search", { query: text, ...origin }, "Searching nearby…");
+      }>("/api/search", { query: text, ...origin }, t("busy.searching"));
       if (!data) return;
       setResults(data.results);
       setHighlighted(data.results[0]?.id ?? null);
@@ -200,14 +202,14 @@ export default function WainApp() {
           data.brand && data.brand.toLowerCase() !== text.trim().toLowerCase()
             ? `“${text}” → ${data.brand}`
             : null,
-          data.google_error ? "Google search unavailable — WAIN data only." : null,
-          !data.results.length ? `Nothing found for “${text}” within 5 km.` : null,
+          data.google_error ? t("explore.googleDown") : null,
+          !data.results.length ? t("explore.nothingFound", { q: text }) : null,
         ]
           .filter(Boolean)
           .join(" · ") || null,
       );
     },
-    [call, origin],
+    [call, origin, t],
   );
 
   // Dragging the map is a question in itself: show what food is over there.
@@ -233,18 +235,18 @@ export default function WainApp() {
         if (!res.ok) return;
         const data = (await res.json()) as { results: SearchResult[] };
         if (!data.results.length) {
-          setNote("No food places found in this area.");
+          setNote(t("explore.areaNone"));
           return;
         }
         setResults(data.results);
-        setNote(`${data.results.length} food places in this area`);
+        setNote(t("explore.areaCount", { n: data.results.length }));
       } catch {
         // A failed area fetch just leaves the previous pins in place.
       } finally {
         setAreaBusy(false);
       }
     },
-    [],
+    [t],
   );
 
   // A first pass of nearby places gives Explore pins and grounds chat before
@@ -359,7 +361,7 @@ export default function WainApp() {
       const res = await fetch("/api/photo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image, ...origin }),
+        body: JSON.stringify({ image, ...origin, lang }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "request failed");
@@ -401,8 +403,8 @@ export default function WainApp() {
     setReelDelivery([]);
     setReelResults([]);
     const steps = transcript.trim()
-      ? ["Reading the transcript…", "Finding the place near you…"]
-      : ["Reading the post…", "Searching the web for the place…", "Finding it near you…"];
+      ? [t("busy.reelTranscript"), t("busy.reelFinding")]
+      : [t("busy.reelReadingPost"), t("busy.reelWeb"), t("busy.reelNear")];
     setReelStep(steps[0]);
     const timers = steps
       .slice(1)
@@ -418,10 +420,10 @@ export default function WainApp() {
     }>(
       "/api/ingest",
       { transcript, url: reelUrl, ...origin },
-      transcript.trim() ? "Extracting from the reel…" : "Looking up the reel…",
+      transcript.trim() ? t("busy.reelExtract") : t("busy.reelLookup"),
     );
     timers.forEach(clearTimeout);
-    setReelStep(data ? "Translating what they said…" : null);
+    setReelStep(data ? t("busy.reelTranslating") : null);
     if (!data) return;
     setExtraction(data.extraction);
     setReelHint(data.hint);
@@ -430,7 +432,7 @@ export default function WainApp() {
     const loc = await call<LocalisedText>(
       "/api/localise",
       { text: data.transcript, register: "auto" },
-      "Localising…",
+      t("busy.localising"),
     );
     if (loc) setLocalised(loc);
     setReelStep(null);
@@ -446,13 +448,15 @@ export default function WainApp() {
       setResults(data.results);
       setHighlighted(data.results[0].id);
       const guess = data.extraction.place_guess;
-      setNote(typeof guess === "string" && guess ? `From the reel: ${guess}` : null);
+      setNote(
+        typeof guess === "string" && guess
+          ? t("explore.fromReel", { name: guess })
+          : null,
+      );
       return;
     }
     if (data.from_web && !data.hint) {
-      setReelHint(
-        "Couldn't tell which place that reel is from — the post isn't indexed. Paste its caption or transcript, or send a screenshot, and I'll find the place.",
-      );
+      setReelHint(t("error.reelUnknown"));
     }
   }
 
@@ -487,8 +491,9 @@ export default function WainApp() {
         // cannot look up itself.
         focusMenu: active?.source === "google" ? (liveMenu?.items ?? []) : undefined,
         focusMenuSource: liveMenu?.source,
+        lang,
       },
-      "…",
+      t("busy.thinking"),
     );
     if (!data) return;
     setMessages([...next, { role: "assistant", content: data.reply }]);
@@ -505,7 +510,7 @@ export default function WainApp() {
       return;
     }
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setError("This browser can't record audio. Type instead.");
+      setError(t("error.noRecorder"));
       return;
     }
 
@@ -513,7 +518,7 @@ export default function WainApp() {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
-      setError("Microphone permission denied.");
+      setError(t("error.micDenied"));
       return;
     }
 
@@ -527,16 +532,16 @@ export default function WainApp() {
       if (blob.size < 1000) return;
       const body = new FormData();
       body.append("audio", blob, `speech.${rec.mimeType.includes("mp4") ? "mp4" : "webm"}`);
-      setBusy("transcribing…");
+      setBusy(t("busy.transcribing"));
       try {
         const res = await fetch("/api/transcribe", { method: "POST", body });
         const data = await res.json();
         setBusy(null);
         if (data.text) send(data.text, true);
-        else setError(data.error ?? "Could not transcribe that.");
+        else setError(data.error ?? t("error.transcribe"));
       } catch {
         setBusy(null);
-        setError("Could not transcribe that.");
+        setError(t("error.transcribe"));
       }
     };
     recorder.current = rec;
@@ -576,7 +581,16 @@ export default function WainApp() {
           <span className="text-lg tracking-[0.2em] text-white">
             WAIN <span className="font-arabic tracking-normal text-[#F2A23A]">وين</span>
           </span>
-          <span className="text-[11px] text-[#A89F94]">{detected}</span>
+          <span className="flex items-center gap-3">
+            <span className="text-[11px] text-[#A89F94]">{detected}</span>
+            <button
+              onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+              aria-label={t("lang.toggleAria")}
+              className="glass rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/80"
+            >
+              {t("lang.toggle")}
+            </button>
+          </span>
         </header>
       )}
 
@@ -604,17 +618,17 @@ export default function WainApp() {
             setInput={setInput}
             onMic={micFromHome}
             listening={listening}
-            gpsStatus={gpsStatus}
+            gpsStatus={t(gpsStatus)}
             lat={lat}
             lng={lng}
             setLat={(v) => {
               manualGps.current = true;
-              setGpsStatus("manual location");
+              setGpsStatus("gps.manual");
               setLat(v);
             }}
             setLng={(v) => {
               manualGps.current = true;
-              setGpsStatus("manual location");
+              setGpsStatus("gps.manual");
               setLng(v);
             }}
             showManualGps={showManualGps}
@@ -644,8 +658,8 @@ export default function WainApp() {
           <section className="flex min-h-0 flex-1 flex-col px-4">
             <p className="py-3 text-xs text-[#A89F94]">
               {active
-                ? `Answering about ${active.name_en}.`
-                : `Answering from ${results.length} places near you — open one for its menu.`}
+                ? t("chat.aboutPlace", { name: names(active, lang).primary })
+                : t("chat.aboutNearby", { n: results.length })}
             </p>
             <div className="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto">
               <ChatDock
@@ -659,8 +673,8 @@ export default function WainApp() {
                 speaking={speaking}
                 listening={listening}
                 busy={!!busy}
-                placeholder="اكتب بالخليجي، Arabizi أو English…"
-                prompts={["شو أطلب؟ أبي شي حار تحت خمسين", "وين أقرب مطعم مفتوح؟", "shu fi 7awali?"]}
+                placeholder={t("chat.placeholder")}
+                prompts={[t("chat.prompt1"), t("chat.prompt2"), t("chat.prompt3")]}
               />
             </div>
           </section>

@@ -25,6 +25,16 @@ body {
 :lang(ar),
 [dir="rtl"] {
   font-family: var(--font-plex-arabic), var(--font-inter), sans-serif;
+  /* Arabic letterforms need more vertical room than Latin at the same size. */
+  line-height: 1.65;
+  letter-spacing: 0;
+}
+
+/* Prices and distances stay left-to-right inside an Arabic sentence. */
+[dir="rtl"] .ltr-nums {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
 }
 
 @utility glass {

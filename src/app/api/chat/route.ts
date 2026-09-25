@@ -21,7 +21,7 @@ const SCHEMA = {
 };
 
 export async function POST(request: Request) {
-  const { message, placeId, history, nearby, focusId, focusMenu, focusMenuSource } =
+  const { message, placeId, history, nearby, focusId, focusMenu, focusMenuSource, lang } =
     (await request.json()) as {
       message: string;
       placeId?: string;
@@ -31,7 +31,15 @@ export async function POST(request: Request) {
       /** Menu read live off the focused place's own pages, if any. */
       focusMenu?: MenuItem[];
       focusMenuSource?: string;
+      /** The interface language, which decides the default reply register. */
+      lang?: "ar" | "en";
     };
+
+  // Arabic is the app's default voice: only a user writing English moves it.
+  const defaultRegister =
+    lang === "en"
+      ? "If the user's register is ambiguous, reply in English."
+      : "If the user's register is ambiguous — a greeting, a single word, a place name, a number — reply in Khaleeji Arabic. Only reply in English when the user clearly writes English sentences.";
 
   const place = placeId ? getPlace(placeId) : undefined;
   if (placeId && !place) return Response.json({ error: "unknown place" }, { status: 404 });
@@ -75,7 +83,7 @@ export async function POST(request: Request) {
       )}\n\nHard rules:\n- Never invent a place, a dish, a price or an opening time.\n- For any place with "has_menu": false you have no menu at all. Do not name a dish, a price, a speciality or "what they're known for" for it, and do not guess from its name or cuisine. Say you don't have their menu yet, in the user's own register, and offer what you do have (distance, rating, open now, directions).\n- Leave "dish_ids" empty unless the dish appears verbatim in one of the menus above.`;
 
   const result = await askJson<ChatResult>({
-    instructions: `${WAIN_SYSTEM_PROMPT}\n\n${grounding}\n\n"register" is the register you replied in.`,
+    instructions: `${WAIN_SYSTEM_PROMPT}\n${defaultRegister}\n\n${grounding}\n\n"register" is the register you replied in.`,
     content: `${transcript ? `${transcript}\n` : ""}User: ${message}`,
     schemaName: "wain_chat",
     schema: SCHEMA,

@@ -5,7 +5,8 @@ import { useEffect, useRef } from "react";
 import ChatBubble from "./ChatBubble";
 import { MicIcon, WaveIcon } from "./icons";
 import type { ChatMessage, MenuItem } from "@/lib/types";
-import { dishImage, isRtl } from "./ui";
+import { useLang } from "@/lib/i18n";
+import { dishImage, isRtl, names, price } from "./ui";
 
 export default function ChatDock({
   messages,
@@ -38,6 +39,7 @@ export default function ChatDock({
   /** Sticks the composer to the bottom of the scroll container. */
   pinned?: boolean;
 }) {
+  const { t, lang } = useLang();
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: "smooth" });
@@ -72,15 +74,15 @@ export default function ChatDock({
                   className="h-24 w-32 rounded-2xl object-cover"
                 />
                 <p className="mt-1.5 truncate text-[13px] font-medium text-white">
-                  {d.name_en}
+                  {names(d, lang).primary}
                 </p>
-                <p className="text-[12px] text-[#A89F94]">AED {d.price_aed}</p>
+                <p className="text-[12px] text-[#A89F94]">{price(d.price_aed, lang)}</p>
               </li>
             ))}
           </ul>
           <p className="pb-2">
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-[#A89F94]">
-              source: menu
+              {t("chat.sourceMenu")}
             </span>
           </p>
         </>
@@ -93,7 +95,6 @@ export default function ChatDock({
               key={q}
               onClick={() => onSend(q)}
               disabled={busy}
-              dir={isRtl(q) ? "rtl" : "ltr"}
               className="glass shrink-0 whitespace-nowrap px-3.5 py-1.5 text-xs text-white/85 disabled:opacity-40"
             >
               {q}
@@ -113,7 +114,7 @@ export default function ChatDock({
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          dir={isRtl(input) ? "rtl" : "ltr"}
+          dir={input ? (isRtl(input) ? "rtl" : "ltr") : undefined}
           placeholder={placeholder}
           className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-white outline-none placeholder:text-white/45"
         />
@@ -121,7 +122,7 @@ export default function ChatDock({
           type="button"
           onClick={onMic}
           disabled={busy}
-          aria-label="Ask by voice — tap to record, tap again to send"
+          aria-label={t("chat.mic")}
           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
             listening ? "bg-rose-500 text-white" : "bg-white/10 text-white"
           } disabled:opacity-40`}

@@ -9,7 +9,8 @@ import {
   WaveIcon,
 } from "./icons";
 import type { SearchResult } from "@/lib/types";
-import { isRtl, metres } from "./ui";
+import { type Key, useLang } from "@/lib/i18n";
+import { isRtl, metres, names } from "./ui";
 
 export type PhotoOutcome = {
   tier: "brand" | "dish" | "unclear";
@@ -25,13 +26,7 @@ export type PhotoOutcome = {
   }[];
 };
 
-const CHIPS = [
-  "شو أطلب؟",
-  "أبي شي مثله",
-  "أماكن حق العائلة",
-  "وين أتسحر؟",
-  "something spicy under 50",
-];
+const CHIPS: Key[] = ["chips.1", "chips.2", "chips.3", "chips.4", "chips.5"];
 
 export default function HomeScreen({
   onPhotoPicked,
@@ -68,6 +63,7 @@ export default function HomeScreen({
   onMic: () => void;
   listening: boolean;
 }) {
+  const { t, lang, setLang } = useLang();
   return (
     <section className="relative flex min-h-full flex-1 flex-col">
       <div
@@ -78,26 +74,34 @@ export default function HomeScreen({
 
       <div className="relative flex min-h-full flex-1 flex-col px-5 pb-4 pt-[calc(env(safe-area-inset-top)+16px)]">
         <div className="flex items-center justify-between">
-          <span className="w-9" />
+          <button
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+            aria-label={t("lang.toggleAria")}
+            className="glass flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-semibold text-white/80"
+          >
+            {t("lang.toggle")}
+          </button>
           <span className="text-xl tracking-[0.25em] text-white">
             WAIN <span className="font-arabic tracking-normal">وين</span>
           </span>
-          <span className="glass flex h-9 w-9 items-center justify-center rounded-full text-white/80">
+          <span
+            aria-label={t("home.profile")}
+            className="glass flex h-9 w-9 items-center justify-center rounded-full text-white/80"
+          >
             <UserIcon className="h-5 w-5" />
           </span>
         </div>
 
         <div className="mt-12 shrink-0">
-          <h1 className="text-[44px] font-semibold leading-[1.05] text-white">
-            See it.
+          <h1 className="text-[44px] font-semibold leading-[1.15] text-white">
+            {t("home.see")}
             <br />
-            Ask it.
+            {t("home.ask")}
             <br />
-            <span className="text-[#F2A23A]">Find it.</span>
+            <span className="text-[#F2A23A]">{t("home.find")}</span>
           </h1>
           <p className="mt-4 max-w-[19rem] text-[15px] leading-snug text-white/75">
-            Your AI guide to restaurants, powered by what you see, and how you
-            speak.
+            {t("home.subline")}
           </p>
         </div>
 
@@ -120,9 +124,9 @@ export default function HomeScreen({
                 onClick={() => onOpen(r)}
                 className="glass flex w-full items-center justify-between p-3 text-left text-sm text-white"
               >
-                <span className="min-w-0 truncate">{r.name_en}</span>
-                <span className="shrink-0 text-xs text-[#A89F94]">
-                  {metres(r.distance_m)}
+                <span className="min-w-0 truncate">{names(r, lang).primary}</span>
+                <span className="ltr-nums shrink-0 text-xs text-[#A89F94]">
+                  {metres(r.distance_m, t)}
                 </span>
               </button>
             ))}
@@ -132,7 +136,7 @@ export default function HomeScreen({
         <div className="glass flex shrink-0 overflow-hidden p-1">
           <label className="flex flex-1 cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-3 text-[13px] font-medium text-white">
             <CameraIcon className="h-6 w-6 text-[#F2A23A]" />
-            Camera
+            {t("home.camera")}
             <input
               type="file"
               accept="image/*"
@@ -143,7 +147,7 @@ export default function HomeScreen({
           </label>
           <label className="flex flex-1 cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-3 text-[13px] font-medium text-white/85">
             <UploadIcon className="h-6 w-6" />
-            Upload
+            {t("home.upload")}
             <input
               type="file"
               accept="image/*"
@@ -156,7 +160,7 @@ export default function HomeScreen({
             className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl py-3 text-[13px] font-medium text-white/85"
           >
             <LinkIcon className="h-6 w-6" />
-            Paste Link
+            {t("home.paste")}
           </button>
         </div>
 
@@ -171,14 +175,14 @@ export default function HomeScreen({
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            dir={isRtl(input) ? "rtl" : "ltr"}
-            placeholder="Ask WAIN…"
+            dir={input ? (isRtl(input) ? "rtl" : "ltr") : undefined}
+            placeholder={t("home.askPlaceholder")}
             className="min-w-0 flex-1 bg-transparent py-1.5 text-[15px] text-white outline-none placeholder:text-white/50"
           />
           <button
             type="button"
             onClick={onMic}
-            aria-label="Ask by voice"
+            aria-label={t("chat.mic")}
             className={`flex h-9 w-9 items-center justify-center rounded-full ${
               listening ? "bg-rose-500 text-white" : "bg-white/10 text-white"
             }`}
@@ -187,16 +191,15 @@ export default function HomeScreen({
           </button>
         </form>
 
-        <p className="mt-4 shrink-0 text-xs text-[#A89F94]">Try asking</p>
+        <p className="mt-4 shrink-0 text-xs text-[#A89F94]">{t("home.tryAsking")}</p>
         <div className="no-scrollbar -mx-5 mt-2 flex shrink-0 gap-2 overflow-x-auto px-5">
           {CHIPS.map((c) => (
             <button
               key={c}
-              onClick={() => onAsk(c)}
-              dir={isRtl(c) ? "rtl" : "ltr"}
+              onClick={() => onAsk(t(c))}
               className="glass shrink-0 whitespace-nowrap px-4 py-2 text-[13px] text-white/90"
             >
-              {c}
+              {t(c)}
             </button>
           ))}
         </div>
@@ -204,7 +207,7 @@ export default function HomeScreen({
         <div className="mt-4 flex shrink-0 items-center justify-between text-[11px] text-[#A89F94]">
           <span>{gpsStatus}</span>
           <button onClick={() => setShowManualGps(!showManualGps)} className="underline">
-            set location
+            {t("home.setLocation")}
           </button>
         </div>
 
@@ -214,13 +217,13 @@ export default function HomeScreen({
               value={lat}
               onChange={(e) => setLat(e.target.value)}
               className="w-32 rounded-lg border border-white/15 bg-transparent px-2 py-1 text-xs text-white"
-              placeholder="lat"
+              placeholder={t("home.lat")}
             />
             <input
               value={lng}
               onChange={(e) => setLng(e.target.value)}
               className="w-32 rounded-lg border border-white/15 bg-transparent px-2 py-1 text-xs text-white"
-              placeholder="lng"
+              placeholder={t("home.lng")}
             />
           </div>
         )}

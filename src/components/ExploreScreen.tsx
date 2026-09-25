@@ -5,7 +5,8 @@ import Image from "next/image";
 import GoogleMapView, { type MapMarker } from "./GoogleMapView";
 import { CloseIcon, SearchIcon } from "./icons";
 import type { SearchResult } from "@/lib/types";
-import { Spinner, dishImage, isRtl, metres } from "./ui";
+import { useLang } from "@/lib/i18n";
+import { Spinner, dishImage, isRtl, metres, names } from "./ui";
 
 export default function ExploreScreen({
   results,
@@ -35,6 +36,7 @@ export default function ExploreScreen({
   onAreaSearch: (area: { lat: number; lng: number; radius_m: number }) => void;
   areaBusy: boolean;
 }) {
+  const { t, lang } = useLang();
   const [full, setFull] = useState(false);
   const highlighted = results.find((r) => r.id === activeId) ?? null;
   const center = highlighted ? { lat: highlighted.lat, lng: highlighted.lng } : origin;
@@ -43,7 +45,7 @@ export default function ExploreScreen({
     id: r.id,
     lat: r.lat,
     lng: r.lng,
-    label: r.name_en,
+    label: names(r, lang).primary,
     seeded: r.source === "wain",
   }));
 
@@ -71,8 +73,8 @@ export default function ExploreScreen({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            dir={isRtl(query) ? "rtl" : "ltr"}
-            placeholder="كنتاكي · kentaki · الفنار · shawarma"
+            dir={query ? (isRtl(query) ? "rtl" : "ltr") : undefined}
+            placeholder={t("explore.placeholder")}
             className="min-w-0 flex-1 bg-transparent py-2 text-sm text-white outline-none placeholder:text-white/45"
           />
         </span>
@@ -81,7 +83,7 @@ export default function ExploreScreen({
           disabled={busy}
           className="rounded-full bg-[#F2A23A] px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"
         >
-          Find
+          {t("explore.find")}
         </button>
       </form>
 
@@ -95,7 +97,7 @@ export default function ExploreScreen({
                 onHighlight(r.id);
                 onOpen(r);
               }}
-              className={`glass flex w-full items-center gap-3 p-3 text-left ${
+              className={`glass flex w-full items-center gap-3 p-3 text-start ${
                 r.id === activeId ? "ring-1 ring-[#F2A23A]/70" : ""
               }`}
             >
@@ -109,21 +111,24 @@ export default function ExploreScreen({
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline justify-between gap-2">
                   <span className="truncate text-sm font-semibold text-white">
-                    {r.name_en}
+                    {names(r, lang).primary}
                   </span>
-                  <span className="shrink-0 text-[11px] text-[#A89F94]">
-                    {metres(r.distance_m)}
+                  <span className="ltr-nums shrink-0 text-[11px] text-[#A89F94]">
+                    {metres(r.distance_m, t)}
                   </span>
                 </span>
-                {r.name_ar && (
-                  <span dir="rtl" className="block truncate text-xs text-[#A89F94]">
-                    {r.name_ar}
+                {names(r, lang).secondary && (
+                  <span
+                    dir={isRtl(names(r, lang).secondary) ? "rtl" : "ltr"}
+                    className="block truncate text-xs text-[#A89F94]"
+                  >
+                    {names(r, lang).secondary}
                   </span>
                 )}
                 <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
                   {r.source === "wain" && (
                     <span className="rounded bg-[#F2A23A]/20 px-1.5 py-0.5 text-[#F2A23A]">
-                      WAIN data
+                      {t("explore.wainData")}
                     </span>
                   )}
                   {r.rating !== null && (
@@ -131,7 +136,7 @@ export default function ExploreScreen({
                   )}
                   {r.open_now !== null && (
                     <span className={r.open_now ? "text-emerald-400" : "text-rose-400"}>
-                      ● {r.open_now ? "open now" : "closed"}
+                      ● {r.open_now ? t("explore.openNow") : t("explore.closed")}
                     </span>
                   )}
                   <span className="truncate text-[#A89F94]">{r.address}</span>
@@ -142,7 +147,7 @@ export default function ExploreScreen({
         ))}
         {!results.length && !busy && (
           <li className="px-1 py-6 text-center text-xs text-[#A89F94]">
-            Search for a place, a brand or a dish.
+            {t("explore.empty")}
           </li>
         )}
       </ul>
@@ -160,13 +165,13 @@ export default function ExploreScreen({
           />
           {areaBusy && (
             <span className="glass absolute left-1/2 top-4 flex -translate-x-1/2 items-center gap-2 rounded-full px-3 py-1.5 text-xs text-white">
-              <Spinner /> fetching this area…
+              <Spinner /> {t("explore.fetching")}
             </span>
           )}
           <button
             onClick={() => setFull(false)}
-            aria-label="Close map"
-            className="absolute right-4 top-4 rounded-full bg-[#0B0907]/90 p-2.5 text-white shadow backdrop-blur"
+            aria-label={t("explore.closeMap")}
+            className="absolute end-4 top-4 rounded-full bg-[#0B0907]/90 p-2.5 text-white shadow backdrop-blur"
           >
             <CloseIcon />
           </button>
@@ -178,7 +183,7 @@ export default function ExploreScreen({
               }}
               className="absolute inset-x-4 bottom-6 rounded-2xl bg-[#F2A23A] px-4 py-3 text-sm font-semibold text-black shadow"
             >
-              Open {highlighted.name_en}
+              {t("explore.open", { name: names(highlighted, lang).primary })}
             </button>
           )}
         </div>
