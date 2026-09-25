@@ -122,7 +122,6 @@ export default function WainApp() {
   const [dishes, setDishes] = useState<MenuItem[]>([]);
   const [listening, setListening] = useState(false);
   const { speak, stop: stopSpeech, speaking } = useSpeech();
-  const [detected, setDetected] = useState<Register>("khaleeji");
   const recorder = useRef<MediaRecorder | null>(null);
 
   useEffect(() => {
@@ -498,7 +497,6 @@ export default function WainApp() {
     if (!data) return;
     setMessages([...next, { role: "assistant", content: data.reply }]);
     setDishes(data.dishes);
-    if (data.register) setDetected(data.register);
     if (spoken) speak(data.reply);
   }
 
@@ -581,16 +579,13 @@ export default function WainApp() {
           <span className="text-lg tracking-[0.2em] text-white">
             WAIN <span className="font-arabic tracking-normal text-[#F2A23A]">وين</span>
           </span>
-          <span className="flex items-center gap-3">
-            <span className="text-[11px] text-[#A89F94]">{detected}</span>
-            <button
-              onClick={() => setLang(lang === "ar" ? "en" : "ar")}
-              aria-label={t("lang.toggleAria")}
-              className="glass rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/80"
-            >
-              {t("lang.toggle")}
-            </button>
-          </span>
+          <button
+            onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+            aria-label={t("lang.toggleAria")}
+            className="glass rounded-full px-2.5 py-1 text-[11px] font-semibold text-white/80"
+          >
+            {t("lang.toggle")}
+          </button>
         </header>
       )}
 
@@ -656,11 +651,11 @@ export default function WainApp() {
 
         {tab === "ask" && (
           <section className="flex min-h-0 flex-1 flex-col px-4">
-            <p className="py-3 text-xs text-[#A89F94]">
-              {active
-                ? t("chat.aboutPlace", { name: names(active, lang).primary })
-                : t("chat.aboutNearby", { n: results.length })}
-            </p>
+            {active && (
+              <p className="py-3 text-xs text-[#A89F94]">
+                {t("chat.aboutPlace", { name: names(active, lang).primary })}
+              </p>
+            )}
             <div className="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto">
               <ChatDock
                 messages={messages}
