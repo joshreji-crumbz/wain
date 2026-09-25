@@ -9,6 +9,7 @@ import HomeScreen, { type PhotoOutcome } from "./HomeScreen";
 import PlacePage, { type Enrichment, type RankedPost, type Saw } from "./PlacePage";
 import ReelSheet from "./ReelSheet";
 import { Spinner } from "./ui";
+import { useSpeech } from "@/lib/speech";
 import type {
   ChatMessage,
   LocalisedText,
@@ -116,6 +117,7 @@ export default function WainApp() {
   const [input, setInput] = useState("");
   const [dishes, setDishes] = useState<MenuItem[]>([]);
   const [listening, setListening] = useState(false);
+  const { speak, stop: stopSpeech, speaking } = useSpeech();
   const [detected, setDetected] = useState<Register>("khaleeji");
   const recorder = useRef<MediaRecorder | null>(null);
 
@@ -431,7 +433,8 @@ export default function WainApp() {
     }
   }
 
-  async function send(text: string) {
+  /** `spoken` means the question came from the mic, so the reply is read back. */
+  async function send(text: string, spoken = false) {
     if (!text.trim()) return;
     const next = [...messages, { role: "user" as const, content: text }];
     setMessages(next);
@@ -455,9 +458,11 @@ export default function WainApp() {
     setMessages([...next, { role: "assistant", content: data.reply }]);
     setDishes(data.dishes);
     if (data.register) setDetected(data.register);
+    if (spoken) speak(data.reply);
   }
 
   async function toggleMic() {
+    stopSpeech();
     if (listening) {
       recorder.current?.stop();
       setListening(false);
@@ -491,7 +496,7 @@ export default function WainApp() {
         const res = await fetch("/api/transcribe", { method: "POST", body });
         const data = await res.json();
         setBusy(null);
-        if (data.text) send(data.text);
+        if (data.text) send(data.text, true);
         else setError(data.error ?? "Could not transcribe that.");
       } catch {
         setBusy(null);
@@ -516,6 +521,8 @@ export default function WainApp() {
     setInput,
     send,
     mic: toggleMic,
+    onSpeak: speak,
+    speaking,
     listening,
     busy: !!busy,
   };
@@ -606,6 +613,8 @@ export default function WainApp() {
                 setInput={setInput}
                 onSend={send}
                 onMic={toggleMic}
+                onSpeak={speak}
+                speaking={speaking}
                 listening={listening}
                 busy={!!busy}
                 placeholder="اكتب بالخليجي، Arabizi أو English…"

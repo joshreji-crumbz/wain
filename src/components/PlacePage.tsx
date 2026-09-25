@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import ChatBubble from "./ChatBubble";
 import ChatDock from "./ChatDock";
 import {
   BackIcon,
@@ -119,6 +120,8 @@ export default function PlacePage({
     setInput: (v: string) => void;
     send: (text: string) => void;
     mic: () => void;
+    onSpeak: (text: string) => void;
+    speaking: string | null;
     listening: boolean;
     busy: boolean;
   };
@@ -463,17 +466,13 @@ export default function PlacePage({
 
           <div className="space-y-2 pb-4 pt-5">
             {chat.messages.map((m, i) => (
-              <div
+              <ChatBubble
                 key={i}
-                dir={isRtl(m.content) ? "rtl" : "ltr"}
-                className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                  m.role === "user"
-                    ? "ml-auto bg-[#F2A23A] text-black"
-                    : "glass text-white"
-                }`}
-              >
-                {m.content}
-              </div>
+                message={m}
+                onSpeak={chat.onSpeak}
+                speaking={chat.speaking === m.content}
+                compact
+              />
             ))}
           </div>
         </div>
@@ -488,6 +487,8 @@ export default function PlacePage({
           setInput={chat.setInput}
           onSend={chat.send}
           onMic={chat.mic}
+          onSpeak={chat.onSpeak}
+          speaking={chat.speaking}
           listening={chat.listening}
           busy={chat.busy}
           placeholder={`Ask about ${result.name_en}…`}
