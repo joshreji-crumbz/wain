@@ -4,6 +4,7 @@ const DETAIL_FIELDS = [
   "id",
   "displayName",
   "formattedAddress",
+  "location",
   "rating",
   "userRatingCount",
   "priceLevel",
@@ -23,6 +24,7 @@ export type GooglePlace = {
   id: string;
   displayName?: { text: string; languageCode?: string };
   formattedAddress?: string;
+  location?: { latitude: number; longitude: number };
   rating?: number;
   userRatingCount?: number;
   priceLevel?: string;
@@ -63,6 +65,7 @@ export async function searchText(
   query: string,
   origin: { lat: number; lng: number },
   radiusM = 2000,
+  maxResultCount = 5,
 ): Promise<GooglePlace[]> {
   const res = await fetch(`${PLACES}/places:searchText`, {
     method: "POST",
@@ -74,7 +77,7 @@ export async function searchText(
     body: JSON.stringify({
       textQuery: query,
       languageCode: "en",
-      maxResultCount: 5,
+      maxResultCount,
       locationBias: {
         circle: { center: { latitude: origin.lat, longitude: origin.lng }, radius: radiusM },
       },
