@@ -1,5 +1,9 @@
 import { DISH_RADIUS_M, matchDish, type DishRead } from "@/lib/dishmatch";
+import { searchText } from "@/lib/google";
 import { askJson, imagePart, textPart } from "@/lib/llm";
+import { sameName } from "@/lib/normalise";
+import { googleRow } from "@/lib/results";
+import type { SearchResult } from "@/lib/types";
 
 const SCHEMA = {
   type: "object",
@@ -38,7 +42,33 @@ If the photo is not food, return empty strings and empty arrays.`,
     return Response.json({ dish, radius_m: DISH_RADIUS_M, places: [] });
   }
 
-  const hits = matchDish(dish, { lat, lng });
+  const origin = { lat, lng };
+  const hits = matchDish(dish, origin);
 
-  return Response.json({ dish, radius_m: DISH_RADIUS_M, places: hits.slice(0, 8) });
+  // Only seeded places have menus, so without Google the nearest real answer
+  // is invisible whenever the dish isn't on one of those nine menus.
+  let nearby: SearchResult[] = [];
+  if (process.env.GOOGLE_MAPS_API_KEY) {
+    try {
+      const found = await searchText(dish.dish_en, origin, DISH_RADIUS_M, 10, "DISTANCE");
+      nearby = found
+        .map((g) => googleRow(g, origin))
+        .filter((g): g is SearchResult => !!g)
+        .filter((g) => (g.distance_m ?? 0) <= DISH_RADIUS_M)
+        .filter(
+          (g) =>
+            !hits.some((h) => sameName(h.place.names.en, g.name_en)),
+        )
+        .sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0));
+    } catch {
+      nearby = [];
+    }
+  }
+
+  return Response.json({
+    dish,
+    radius_m: DISH_RADIUS_M,
+    places: hits.slice(0, 8),
+    nearby,
+  });
 }

@@ -26,9 +26,13 @@ export type DishHit = {
  * every menu.
  */
 function score(place: Place, dish: DishRead) {
+  const name = `${dish.dish_en} ${dish.dish_ar}`.toLowerCase();
   const needles = [dish.dish_en, dish.dish_ar, ...dish.keywords]
     .map((k) => k.trim().toLowerCase())
-    .filter((k) => k.length > 3);
+    .filter((k) => k.length > 3)
+    // Ingredient keywords ("beef", "cheese") turn every steak into a burger,
+    // so only words that name the dish itself count.
+    .filter((k) => name.includes(k));
 
   const matched = place.menu.filter((item) => {
     const text = `${item.name_en} ${item.name_ar} ${item.variants.join(" ")}`.toLowerCase();

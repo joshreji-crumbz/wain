@@ -42,6 +42,8 @@ export type Place = {
 export type Post = {
   place_id: string;
   sample?: boolean;
+  /** Found live on the web rather than curated by us. */
+  web?: boolean;
   platform: string;
   url: string;
   creator: string;

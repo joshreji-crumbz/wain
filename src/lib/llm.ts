@@ -51,6 +51,32 @@ export async function askJson<T>({
   return JSON.parse(response.output_text) as T;
 }
 
+/** Free-text answer grounded in a live web search. */
+export async function askTextWithSearch({
+  instructions,
+  content,
+  city,
+  country,
+}: {
+  instructions: string;
+  content: string;
+  city?: string;
+  country?: string;
+}): Promise<string> {
+  const response = await openai().responses.create({
+    model: WAIN_MODEL,
+    instructions,
+    input: content,
+    tools: [
+      {
+        type: "web_search",
+        user_location: { type: "approximate", city, country },
+      },
+    ],
+  });
+  return response.output_text;
+}
+
 export async function askText({
   instructions,
   content,
