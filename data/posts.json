@@ -1,172 +1,221 @@
 {
   "posts": [
     {
-      "place_id": "galleria-hot-chicken",
+      "place_id": "shake-shack",
       "sample": true,
-      "platform": "tiktok",
+      "platform": "instagram",
       "url": "https://example.com/sample-post-1",
       "creator": "@sample_creator_1",
       "creator_region": "gulf",
       "lang": "ar-khaleeji",
-      "posted": "2026-09-10",
-      "transcript": "وايد زين الدجاج الحار هني، طلبت الساندويتش بـ 45 درهم وكان حار عدل.",
-      "dishes_mentioned": ["Nashville Hot Chicken Sandwich"]
+      "posted": "2026-08-03",
+      "transcript": "يا جماعة ShackBurger بـ35 درهم طلع سايح ولذيذ مرّة. خذوا معاه Crinkle Cut Fries.",
+      "dishes_mentioned": [
+        "ShackBurger",
+        "Crinkle Cut Fries"
+      ]
     },
     {
-      "place_id": "galleria-hot-chicken",
-      "sample": true,
-      "platform": "instagram",
-      "url": "https://example.com/sample-post-2",
-      "creator": "@sample_creator_2",
-      "creator_region": "gulf",
-      "lang": "arabizi",
-      "posted": "2026-09-02",
-      "transcript": "el hot chicken 3andhom 7ar wayed, w el fries ma tfoot",
-      "dishes_mentioned": ["Nashville Hot Chicken Sandwich", "Loaded Fries"]
-    },
-    {
-      "place_id": "galleria-hot-chicken",
+      "place_id": "shake-shack",
       "sample": true,
       "platform": "tiktok",
-      "url": "https://example.com/sample-post-3",
-      "creator": "@sample_creator_3",
+      "url": "https://example.com/sample-post-2",
+      "creator": "@sample_creator_2",
       "creator_region": "other",
       "lang": "en",
-      "posted": "2026-09-18",
-      "transcript": "Got the hot chicken sandwich for 45 dirhams, easily the best fried chicken on Maryah.",
-      "dishes_mentioned": ["Nashville Hot Chicken Sandwich"]
+      "posted": "2026-08-09",
+      "transcript": "Quick mall lunch: the Chicken Shack is AED 34 and properly crispy. I’d order it again.",
+      "dishes_mentioned": [
+        "Chicken Shack"
+      ]
     },
     {
-      "place_id": "galleria-hot-chicken",
+      "place_id": "shake-shack",
       "sample": true,
       "platform": "instagram",
+      "url": "https://example.com/sample-post-3",
+      "creator": "@sample_creator_3",
+      "creator_region": "gulf",
+      "lang": "ar-khaleeji",
+      "posted": "2026-08-16",
+      "transcript": "الـSmokeShack فيه حرارة خفيفة وحلوة، وسعره 40 درهم. البرغر صغير بس يشبع إذا مع بطاط.",
+      "dishes_mentioned": [
+        "SmokeShack"
+      ]
+    },
+    {
+      "place_id": "shake-shack",
+      "sample": true,
+      "platform": "tiktok",
       "url": "https://example.com/sample-post-4",
       "creator": "@sample_creator_4",
       "creator_region": "gulf",
-      "lang": "ar-khaleeji",
-      "posted": "2026-08-21",
-      "transcript": "جربت السماش برجر وكان زين بس الدجاج الحار أحلى.",
-      "dishes_mentioned": ["Smash Burger", "Nashville Hot Chicken Sandwich"]
+      "lang": "arabizi",
+      "posted": "2026-09-01",
+      "transcript": "ShackBurger b 35 AED, simple w juicy bil dha6. Crinkle Cut Fries ma yikmal el order bidonha.",
+      "dishes_mentioned": [
+        "ShackBurger",
+        "Crinkle Cut Fries"
+      ]
     },
     {
-      "place_id": "galleria-hot-chicken",
+      "place_id": "shake-shack",
       "sample": true,
-      "platform": "tiktok",
+      "platform": "instagram",
       "url": "https://example.com/sample-post-5",
       "creator": "@sample_creator_5",
       "creator_region": "other",
       "lang": "en",
-      "posted": "2026-07-30",
-      "transcript": "Late night tenders run, spicy tenders were 38 and still open at 1am.",
-      "dishes_mentioned": ["Spicy Chicken Tenders"]
+      "posted": "2026-09-07",
+      "transcript": "The SmokeShack has a nice little kick for AED 40. Great fast-casual stop at The Galleria.",
+      "dishes_mentioned": [
+        "SmokeShack"
+      ]
     },
     {
-      "place_id": "al-fanar-maryah",
+      "place_id": "grand-beirut",
       "sample": true,
       "platform": "tiktok",
       "url": "https://example.com/sample-post-6",
       "creator": "@sample_creator_6",
       "creator_region": "gulf",
       "lang": "ar-khaleeji",
-      "posted": "2026-09-14",
-      "transcript": "المجبوس دجاج هني أبي أقول لكم وايد زين، و اللقيمات لا تفوتونها.",
-      "dishes_mentioned": ["Chicken Machboos", "Luqaimat"]
+      "posted": "2026-08-05",
+      "transcript": "Hummus Beiruti بـ30 درهم، طعمه حامض وحار شوي مثل ما أحب. لا تفوتون Fattoush معاه.",
+      "dishes_mentioned": [
+        "Hummus Beiruti",
+        "Fattoush"
+      ]
     },
     {
-      "place_id": "al-fanar-maryah",
+      "place_id": "grand-beirut",
       "sample": true,
       "platform": "instagram",
       "url": "https://example.com/sample-post-7",
       "creator": "@sample_creator_7",
       "creator_region": "gulf",
-      "lang": "arabizi",
-      "posted": "2026-08-28",
-      "transcript": "el machboos 3andhom 7elw w el karak ma yenfa3 tfoota",
-      "dishes_mentioned": ["Chicken Machboos", "Karak Chai"]
+      "lang": "ar-khaleeji",
+      "posted": "2026-08-12",
+      "transcript": "طلبنا Mixed Grill بـ98 درهم وتقاسمناه بين اثنين، كمية المشاوي زينة. اللحم والدجاج كانوا طريين.",
+      "dishes_mentioned": [
+        "Mixed Grill"
+      ]
     },
     {
-      "place_id": "al-fanar-maryah",
+      "place_id": "grand-beirut",
       "sample": true,
       "platform": "tiktok",
       "url": "https://example.com/sample-post-8",
       "creator": "@sample_creator_8",
       "creator_region": "other",
       "lang": "en",
-      "posted": "2026-09-01",
-      "transcript": "Tried the lamb harees here, super comforting and only 55 AED.",
-      "dishes_mentioned": ["Lamb Harees"]
+      "posted": "2026-08-24",
+      "transcript": "Chicken Shawarma Platter for AED 54 was a very solid comfort-food order. Add the Fattoush if you want something fresh.",
+      "dishes_mentioned": [
+        "Chicken Shawarma Platter",
+        "Fattoush"
+      ]
     },
     {
-      "place_id": "al-fanar-maryah",
+      "place_id": "grand-beirut",
       "sample": true,
       "platform": "instagram",
       "url": "https://example.com/sample-post-9",
-      "creator": "@sample_creator_9",
+      "creator": "@sample_creator_1",
       "creator_region": "gulf",
-      "lang": "ar-khaleeji",
-      "posted": "2026-07-19",
-      "transcript": "عرض الإفطار هني زين للعائلة، والمجبوس كان أحلى شي بالطاولة.",
-      "dishes_mentioned": ["Chicken Machboos"]
+      "lang": "arabizi",
+      "posted": "2026-09-03",
+      "transcript": "Mixed Grill b 98 AED yisawa lel share, w Hummus Beiruti 3ando kick 7elw. Hatha orderna el marra el yaaya.",
+      "dishes_mentioned": [
+        "Mixed Grill",
+        "Hummus Beiruti"
+      ]
     },
     {
-      "place_id": "beit-el-karak",
+      "place_id": "grand-beirut",
       "sample": true,
       "platform": "tiktok",
       "url": "https://example.com/sample-post-10",
-      "creator": "@sample_creator_10",
+      "creator": "@sample_creator_2",
       "creator_region": "gulf",
       "lang": "ar-khaleeji",
-      "posted": "2026-09-20",
-      "transcript": "أحلى كرك في مريا، و يفتحون للسحور بعد.",
-      "dishes_mentioned": ["Karak Chai"]
+      "posted": "2026-09-11",
+      "transcript": "Chicken Shawarma Platter بـ54 درهم وصل حار ومليان دجاج. الصوص معه يخليه أطيب.",
+      "dishes_mentioned": [
+        "Chicken Shawarma Platter"
+      ]
     },
     {
-      "place_id": "beit-el-karak",
+      "place_id": "zuma",
       "sample": true,
       "platform": "instagram",
       "url": "https://example.com/sample-post-11",
-      "creator": "@sample_creator_11",
+      "creator": "@sample_creator_3",
       "creator_region": "gulf",
-      "lang": "arabizi",
-      "posted": "2026-09-05",
-      "transcript": "el karak 3andhom 7elw w el ragag bel jebn wayed zain",
-      "dishes_mentioned": ["Karak Chai", "Regag with Cheese"]
+      "lang": "ar-khaleeji",
+      "posted": "2026-08-07",
+      "transcript": "Miso Marinated Black Cod غالي بـ245 درهم، بس والله يذوب بالفم. هذا الطبق اللي أرجع عشانه.",
+      "dishes_mentioned": [
+        "Miso Marinated Black Cod"
+      ]
     },
     {
-      "place_id": "beit-el-karak",
+      "place_id": "zuma",
       "sample": true,
       "platform": "tiktok",
       "url": "https://example.com/sample-post-12",
-      "creator": "@sample_creator_12",
+      "creator": "@sample_creator_4",
       "creator_region": "other",
       "lang": "en",
-      "posted": "2026-08-12",
-      "transcript": "Suhoor spot that actually stays open till 3am, balaleet was 22 dirhams.",
-      "dishes_mentioned": ["Balaleet"]
+      "posted": "2026-08-19",
+      "transcript": "The Seared Tuna with Chilli Daikon is AED 155 and beautifully balanced. Light, fresh, and a little spicy.",
+      "dishes_mentioned": [
+        "Seared Tuna with Chilli Daikon"
+      ]
     },
     {
-      "place_id": "beit-el-karak",
+      "place_id": "zuma",
       "sample": true,
       "platform": "instagram",
       "url": "https://example.com/sample-post-13",
-      "creator": "@sample_creator_13",
+      "creator": "@sample_creator_5",
       "creator_region": "gulf",
       "lang": "ar-khaleeji",
-      "posted": "2026-07-25",
-      "transcript": "الصالونة دجاج حارة شوي بس زينة، والمكان يسع جمعة كبيرة.",
-      "dishes_mentioned": ["Chicken Saloona"]
+      "posted": "2026-09-05",
+      "transcript": "Spicy Beef Tenderloin حرارته واضحة بس مو مزعجة، وسعره 210 درهم. إذا تحبون السبايسي هذا لازم تجربونه.",
+      "dishes_mentioned": [
+        "Spicy Beef Tenderloin"
+      ]
     },
     {
-      "place_id": "beit-el-karak",
+      "place_id": "zuma",
       "sample": true,
       "platform": "tiktok",
       "url": "https://example.com/sample-post-14",
-      "creator": "@sample_creator_14",
+      "creator": "@sample_creator_6",
+      "creator_region": "gulf",
+      "lang": "arabizi",
+      "posted": "2026-09-14",
+      "transcript": "Roasted Lobster b 295 AED luxury mode bas el ponzu butter khayali. Miso Marinated Black Cod ba3ad must-order.",
+      "dishes_mentioned": [
+        "Roasted Lobster",
+        "Miso Marinated Black Cod"
+      ]
+    },
+    {
+      "place_id": "zuma",
+      "sample": true,
+      "platform": "instagram",
+      "url": "https://example.com/sample-post-15",
+      "creator": "@sample_creator_7",
       "creator_region": "gulf",
       "lang": "ar-khaleeji",
-      "posted": "2026-06-30",
-      "transcript": "كل يوم أشرب كرك من هني، 9 دراهم بس.",
-      "dishes_mentioned": ["Karak Chai"]
+      "posted": "2026-09-22",
+      "transcript": "Seared Tuna with Chilli Daikon خفيف ومنعش، خصوصًا لو بتطلبون أطباق كثيرة. عقبها Spicy Beef Tenderloin يعطيكم النكهة القوية.",
+      "dishes_mentioned": [
+        "Seared Tuna with Chilli Daikon",
+        "Spicy Beef Tenderloin"
+      ]
     }
   ]
 }

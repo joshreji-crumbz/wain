@@ -1,168 +1,718 @@
 {
   "places": [
     {
-      "id": "al-fanar-maryah",
-      "sample": true,
+      "id": "ashas",
+      "sample": false,
       "names": {
-        "en": "Al Fanar Restaurant & Cafe",
-        "ar": "مطعم ومقهى الفنار",
-        "arabizi": ["el fanar", "alfanar", "al-fanar", "fanar"],
-        "handles": ["alfanar_uae"]
+        "en": "Asha's",
+        "ar": "آشاز",
+        "arabizi": [
+          "ashas",
+          "asha's",
+          "ashaz",
+          "ashas abu dhabi"
+        ],
+        "handles": [
+          "@ashasrestaurants",
+          "@ashasuae"
+        ]
       },
-      "area": "Al Maryah Island, Abu Dhabi",
-      "lat": 24.50105,
-      "lng": 54.38895,
-      "hours": "09:00-23:30",
+      "area": "The Galleria, Al Maryah Island, Abu Dhabi",
+      "lat": 24.501301,
+      "lng": 54.389702,
+      "hours": "11:00-23:00",
       "tags": {
         "family_section": true,
         "shisha": false,
         "suhoor": false,
-        "iftar_deal": true,
+        "iftar_deal": false,
         "halal": true,
         "alcohol": false,
         "pork": false,
         "max_group": 12
       },
       "price_band": "mid",
-      "cuisine": ["emirati"],
-      "links": { "website": "", "instagram": "", "maps": "" },
+      "cuisine": [
+        "indian",
+        "north indian"
+      ],
+      "links": {
+        "website": "",
+        "instagram": "",
+        "maps": "https://www.google.com/maps/place/?q=place_id:ChIJ9TzaqatnXj4R66j-zNftoDI"
+      },
       "menu": [
-        { "name_en": "Chicken Machboos", "name_ar": "مجبوس دجاج", "variants": ["majboos", "makboos"], "price_aed": 62, "spicy": 2, "protein": "chicken", "source": "official menu" },
-        { "name_en": "Lamb Harees", "name_ar": "هريس لحم", "variants": ["hareis"], "price_aed": 55, "spicy": 0, "protein": "lamb", "source": "official menu" },
-        { "name_en": "Luqaimat", "name_ar": "لقيمات", "variants": ["logaimat", "lgemat"], "price_aed": 28, "spicy": 0, "protein": "none", "source": "official menu" },
-        { "name_en": "Karak Chai", "name_ar": "كرك", "variants": ["karak", "chai karak"], "price_aed": 14, "spicy": 0, "protein": "none", "source": "official menu" }
+        {
+          "name_en": "Dal Makhani",
+          "name_ar": "دال مخني",
+          "variants": [
+            "vegetarian"
+          ],
+          "price_aed": 42,
+          "spicy": 1,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Murgh Malai Kebab",
+          "name_ar": "مرغ مالاي كباب",
+          "variants": [
+            "chicken"
+          ],
+          "price_aed": 56,
+          "spicy": 0,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Butter Chicken",
+          "name_ar": "دجاج بالزبدة",
+          "variants": [
+            "chicken"
+          ],
+          "price_aed": 62,
+          "spicy": 1,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Asha's Gosht Biryani",
+          "name_ar": "برياني غوشـت آشاز",
+          "variants": [
+            "lamb"
+          ],
+          "price_aed": 72,
+          "spicy": 2,
+          "protein": "lamb",
+          "source": "sample menu"
+        }
       ]
     },
     {
-      "id": "galleria-hot-chicken",
-      "sample": true,
+      "id": "din-tai-fung",
+      "sample": false,
       "names": {
-        "en": "Maryah Hot Chicken",
-        "ar": "مريا هوت تشكن",
-        "arabizi": ["maryah hot chiken", "hot chicken maryah", "el hot chicken"],
-        "handles": ["maryahhotchicken"]
+        "en": "Din Tai Fung",
+        "ar": "دين تاي فونغ",
+        "arabizi": [
+          "din tai fung",
+          "dintai fung",
+          "din tay fung",
+          "din tai fong"
+        ],
+        "handles": [
+          "@dintaifunguae",
+          "@dintaifung"
+        ]
       },
-      "area": "The Galleria, Al Maryah Island",
-      "lat": 24.50085,
-      "lng": 54.3893,
-      "hours": "11:00-02:00",
+      "area": "The Galleria, Al Maryah Island, Abu Dhabi",
+      "lat": 24.501165,
+      "lng": 54.390212,
+      "hours": "11:00-22:00",
+      "tags": {
+        "family_section": true,
+        "shisha": false,
+        "suhoor": false,
+        "iftar_deal": false,
+        "halal": true,
+        "alcohol": false,
+        "pork": false,
+        "max_group": 10
+      },
+      "price_band": "mid",
+      "cuisine": [
+        "taiwanese",
+        "chinese",
+        "dim sum"
+      ],
+      "links": {
+        "website": "",
+        "instagram": "",
+        "maps": "https://www.google.com/maps/place/?q=place_id:ChIJefviaURnXj4Ryz-cOKx36hM"
+      },
+      "menu": [
+        {
+          "name_en": "Chicken Xiao Long Bao",
+          "name_ar": "شياو لونغ باو بالدجاج",
+          "variants": [
+            "6 pieces",
+            "10 pieces"
+          ],
+          "price_aed": 38,
+          "spicy": 0,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Shrimp and Chicken Dumplings",
+          "name_ar": "دامبلنغ الروبيان والدجاج",
+          "variants": [
+            "steamed"
+          ],
+          "price_aed": 42,
+          "spicy": 0,
+          "protein": "shrimp",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Shrimp and Chicken Wontons with Spicy Sauce",
+          "name_ar": "وانتون الروبيان والدجاج بصلصة حارة",
+          "variants": [
+            "spicy sauce"
+          ],
+          "price_aed": 44,
+          "spicy": 3,
+          "protein": "shrimp",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Crispy Beef Strips",
+          "name_ar": "شرائح لحم بقري مقرمشة",
+          "variants": [
+            "sweet and spicy sauce"
+          ],
+          "price_aed": 58,
+          "spicy": 2,
+          "protein": "beef",
+          "source": "sample menu"
+        }
+      ]
+    },
+    {
+      "id": "grand-beirut",
+      "sample": false,
+      "names": {
+        "en": "Grand Beirut",
+        "ar": "غراند بيروت",
+        "arabizi": [
+          "grand beirut",
+          "grand bayroot",
+          "غراند بيروت",
+          "beirut restaurant"
+        ],
+        "handles": [
+          "@grandbeirut",
+          "@grandbeirutuae"
+        ]
+      },
+      "area": "The Galleria, Al Maryah Island, Abu Dhabi",
+      "lat": 24.501004,
+      "lng": 54.390489,
+      "hours": "09:00-00:00",
       "tags": {
         "family_section": true,
         "shisha": false,
         "suhoor": true,
+        "iftar_deal": true,
+        "halal": true,
+        "alcohol": false,
+        "pork": false,
+        "max_group": 18
+      },
+      "price_band": "mid",
+      "cuisine": [
+        "lebanese",
+        "middle eastern"
+      ],
+      "links": {
+        "website": "",
+        "instagram": "",
+        "maps": "https://www.google.com/maps/place/?q=place_id:ChIJxxU9IT5nXj4RZT2Lys9yGaU"
+      },
+      "menu": [
+        {
+          "name_en": "Hummus Beiruti",
+          "name_ar": "حمص بيروتي",
+          "variants": [
+            "classic"
+          ],
+          "price_aed": 30,
+          "spicy": 1,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Fattoush",
+          "name_ar": "فتوش",
+          "variants": [
+            "classic"
+          ],
+          "price_aed": 34,
+          "spicy": 0,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Mixed Grill",
+          "name_ar": "مشاوي مشكلة",
+          "variants": [
+            "for one",
+            "for two"
+          ],
+          "price_aed": 98,
+          "spicy": 1,
+          "protein": "mixed meat",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Chicken Shawarma Platter",
+          "name_ar": "طبق شاورما دجاج",
+          "variants": [
+            "chicken"
+          ],
+          "price_aed": 54,
+          "spicy": 0,
+          "protein": "chicken",
+          "source": "sample menu"
+        }
+      ]
+    },
+    {
+      "id": "joga",
+      "sample": false,
+      "names": {
+        "en": "Joga",
+        "ar": "جوغا",
+        "arabizi": [
+          "joga",
+          "joga salads",
+          "joga galleria",
+          "joga bowls"
+        ],
+        "handles": [
+          "@joga.ae",
+          "@jogauae"
+        ]
+      },
+      "area": "The Galleria, Al Maryah Island, Abu Dhabi",
+      "lat": 24.501241,
+      "lng": 54.388522,
+      "hours": "08:00-00:00",
+      "tags": {
+        "family_section": true,
+        "shisha": false,
+        "suhoor": false,
         "iftar_deal": false,
         "halal": true,
         "alcohol": false,
         "pork": false,
         "max_group": 8
       },
-      "price_band": "low",
-      "cuisine": ["american", "fried chicken"],
-      "links": { "website": "", "instagram": "", "maps": "" },
+      "price_band": "mid",
+      "cuisine": [
+        "healthy",
+        "salads",
+        "bowls"
+      ],
+      "links": {
+        "website": "",
+        "instagram": "",
+        "maps": "https://www.google.com/maps/place/?q=place_id:ChIJ2X29s8hnXj4RAH3c1QliozQ"
+      },
       "menu": [
-        { "name_en": "Nashville Hot Chicken Sandwich", "name_ar": "ساندويتش دجاج حار", "variants": ["hot chicken", "spicy chicken sando"], "price_aed": 45, "spicy": 3, "protein": "chicken", "source": "official menu" },
-        { "name_en": "Smash Burger", "name_ar": "سماش برجر", "variants": ["burger", "el burger"], "price_aed": 48, "spicy": 1, "protein": "beef", "source": "official menu" },
-        { "name_en": "Spicy Chicken Tenders", "name_ar": "أصابع دجاج حارة", "variants": ["tenders"], "price_aed": 38, "spicy": 3, "protein": "chicken", "source": "official menu" },
-        { "name_en": "Loaded Fries", "name_ar": "بطاطس بالجبن", "variants": ["cheese fries"], "price_aed": 26, "spicy": 1, "protein": "none", "source": "official menu" }
+        {
+          "name_en": "Joga Bowl",
+          "name_ar": "جوجا بول",
+          "variants": [
+            "chicken"
+          ],
+          "price_aed": 52,
+          "spicy": 1,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Chicken Caesar Salad",
+          "name_ar": "سلطة سيزر بالدجاج",
+          "variants": [
+            "grilled chicken"
+          ],
+          "price_aed": 48,
+          "spicy": 0,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Mexican Chicken Wrap",
+          "name_ar": "راب دجاج مكسيكي",
+          "variants": [
+            "chicken"
+          ],
+          "price_aed": 44,
+          "spicy": 2,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Acai Bowl",
+          "name_ar": "أكاي بول",
+          "variants": [
+            "berries and granola"
+          ],
+          "price_aed": 42,
+          "spicy": 0,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        }
       ]
     },
     {
-      "id": "beit-el-karak",
-      "sample": true,
+      "id": "novikov",
+      "sample": false,
       "names": {
-        "en": "Beit Al Karak",
-        "ar": "بيت الكرك",
-        "arabizi": ["beit el karak", "bait al karak", "bet elkarak"],
-        "handles": ["beitalkarak_ad"]
+        "en": "Novikov",
+        "ar": "نوفيكوف",
+        "arabizi": [
+          "novikov",
+          "novikov abu dhabi",
+          "novikof",
+          "نوفيكوف"
+        ],
+        "handles": [
+          "@novikovabudhabi",
+          "@novikovrestaurant"
+        ]
       },
-      "area": "Al Maryah Island waterfront",
-      "lat": 24.5013,
-      "lng": 54.3886,
-      "hours": "06:00-03:00",
+      "area": "The Galleria, Al Maryah Island, Abu Dhabi",
+      "lat": 24.50041,
+      "lng": 54.388159,
+      "hours": "12:00-01:00",
       "tags": {
-        "family_section": true,
-        "shisha": true,
-        "suhoor": true,
-        "iftar_deal": true,
-        "halal": true,
-        "alcohol": false,
+        "family_section": false,
+        "shisha": false,
+        "suhoor": false,
+        "iftar_deal": false,
+        "halal": false,
+        "alcohol": true,
         "pork": false,
-        "max_group": 20
+        "max_group": 12
       },
-      "price_band": "low",
-      "cuisine": ["cafe", "emirati", "levantine"],
-      "links": { "website": "", "instagram": "", "maps": "" },
+      "price_band": "high",
+      "cuisine": [
+        "italian",
+        "mediterranean",
+        "fine dining"
+      ],
+      "links": {
+        "website": "",
+        "instagram": "",
+        "maps": "https://www.google.com/maps/place/?q=place_id:ChIJTWOy4i1nXj4RtX_8LyhzuRs"
+      },
       "menu": [
-        { "name_en": "Karak Chai", "name_ar": "شاي كرك", "variants": ["karak", "el karak"], "price_aed": 9, "spicy": 0, "protein": "none", "source": "official menu" },
-        { "name_en": "Chicken Saloona", "name_ar": "صالونة دجاج", "variants": ["salona"], "price_aed": 42, "spicy": 2, "protein": "chicken", "source": "official menu" },
-        { "name_en": "Regag with Cheese", "name_ar": "رقاق بالجبن", "variants": ["ragag", "rgag"], "price_aed": 18, "spicy": 0, "protein": "none", "source": "official menu" },
-        { "name_en": "Balaleet", "name_ar": "بلاليط", "variants": ["balalit"], "price_aed": 22, "spicy": 0, "protein": "none", "source": "official menu" }
+        {
+          "name_en": "Tuna Pizza",
+          "name_ar": "بيتزا التونة",
+          "variants": [
+            "truffle and tuna"
+          ],
+          "price_aed": 105,
+          "spicy": 0,
+          "protein": "tuna",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Burrata",
+          "name_ar": "بوراتا",
+          "variants": [
+            "tomatoes"
+          ],
+          "price_aed": 92,
+          "spicy": 0,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Rigatoni with Black Truffle",
+          "name_ar": "ريغاتوني بالكمأة السوداء",
+          "variants": [
+            "vegetarian"
+          ],
+          "price_aed": 138,
+          "spicy": 0,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Miso Black Cod",
+          "name_ar": "سمك القد الأسود بالميسو",
+          "variants": [
+            "black cod"
+          ],
+          "price_aed": 198,
+          "spicy": 0,
+          "protein": "fish",
+          "source": "sample menu"
+        }
       ]
     },
     {
-      "id": "maryah-sushi-bar",
-      "sample": true,
+      "id": "salt",
+      "sample": false,
       "names": {
-        "en": "Maryah Sushi Bar",
-        "ar": "مريا سوشي بار",
-        "arabizi": ["maryah sushi", "sushi bar maryah"],
-        "handles": ["maryahsushibar"]
+        "en": "SALT",
+        "ar": "سالت",
+        "arabizi": [
+          "salt",
+          "salt burger",
+          "salt abu dhabi",
+          "salt galleria"
+        ],
+        "handles": [
+          "@findsalt",
+          "@salt.uae"
+        ]
       },
-      "area": "The Galleria, Al Maryah Island",
-      "lat": 24.50065,
-      "lng": 54.38875,
-      "hours": "12:00-00:00",
+      "area": "The Galleria, Al Maryah Island, Abu Dhabi",
+      "lat": 24.499958,
+      "lng": 54.390058,
+      "hours": "10:00-00:00",
       "tags": {
         "family_section": false,
         "shisha": false,
         "suhoor": false,
         "iftar_deal": false,
         "halal": true,
-        "alcohol": true,
+        "alcohol": false,
         "pork": false,
         "max_group": 6
       },
-      "price_band": "high",
-      "cuisine": ["japanese"],
-      "links": { "website": "", "instagram": "", "maps": "" },
+      "price_band": "mid",
+      "cuisine": [
+        "burgers",
+        "fast casual"
+      ],
+      "links": {
+        "website": "",
+        "instagram": "",
+        "maps": "https://www.google.com/maps/place/?q=place_id:ChIJ23ehk_xnXj4RtXt_nJ600x4"
+      },
       "menu": [
-        { "name_en": "Spicy Tuna Roll", "name_ar": "رول تونا حار", "variants": ["spicy tuna"], "price_aed": 72, "spicy": 2, "protein": "fish", "source": "official menu" },
-        { "name_en": "Salmon Nigiri (4 pcs)", "name_ar": "نيجيري سلمون", "variants": ["nigiri"], "price_aed": 65, "spicy": 0, "protein": "fish", "source": "official menu" },
-        { "name_en": "Wagyu Gyoza", "name_ar": "جيوزا واغيو", "variants": ["gyoza"], "price_aed": 88, "spicy": 1, "protein": "beef", "source": "official menu" },
-        { "name_en": "Edamame", "name_ar": "إدامامي", "variants": [], "price_aed": 32, "spicy": 0, "protein": "none", "source": "official menu" }
+        {
+          "name_en": "SALT Slider",
+          "name_ar": "سلايدر سالت",
+          "variants": [
+            "single",
+            "double"
+          ],
+          "price_aed": 38,
+          "spicy": 0,
+          "protein": "beef",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Chicken Slider",
+          "name_ar": "سلايدر دجاج",
+          "variants": [
+            "single",
+            "double"
+          ],
+          "price_aed": 36,
+          "spicy": 0,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "SALT Fries",
+          "name_ar": "بطاطا سالت",
+          "variants": [
+            "classic"
+          ],
+          "price_aed": 18,
+          "spicy": 0,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Lotus Softie",
+          "name_ar": "سوفت آيس كريم لوتس",
+          "variants": [
+            "Lotus biscuit"
+          ],
+          "price_aed": 26,
+          "spicy": 0,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        }
       ]
     },
     {
-      "id": "mathaq-al-bahar",
-      "sample": true,
+      "id": "shake-shack",
+      "sample": false,
       "names": {
-        "en": "Mathaq Al Bahar",
-        "ar": "مذاق البحر",
-        "arabizi": ["mazaq el bahar", "mathag al bahar", "el bahar"],
-        "handles": ["mathaqalbahar"]
+        "en": "Shake Shack",
+        "ar": "شيك شاك",
+        "arabizi": [
+          "shake shack",
+          "shakeshack",
+          "sheik shak",
+          "شيك شاك"
+        ],
+        "handles": [
+          "@shakeshackme",
+          "@shakeshack"
+        ]
       },
-      "area": "Al Maryah Island, near Galleria",
-      "lat": 24.50115,
-      "lng": 54.38955,
-      "hours": "12:00-01:00",
+      "area": "The Galleria, Al Maryah Island, Abu Dhabi",
+      "lat": 24.501301,
+      "lng": 54.389702,
+      "hours": "10:00-01:00",
       "tags": {
         "family_section": true,
-        "shisha": true,
-        "suhoor": true,
-        "iftar_deal": true,
+        "shisha": false,
+        "suhoor": false,
+        "iftar_deal": false,
         "halal": true,
         "alcohol": false,
         "pork": false,
-        "max_group": 16
+        "max_group": 8
       },
       "price_band": "mid",
-      "cuisine": ["seafood", "emirati"],
-      "links": { "website": "", "instagram": "", "maps": "" },
+      "cuisine": [
+        "burgers",
+        "american",
+        "fast casual"
+      ],
+      "links": {
+        "website": "",
+        "instagram": "",
+        "maps": "https://www.google.com/maps/place/?q=place_id:ChIJ1SOqNllnXj4R4Aay3G-1B6k"
+      },
       "menu": [
-        { "name_en": "Grilled Hammour", "name_ar": "هامور مشوي", "variants": ["hamour"], "price_aed": 95, "spicy": 1, "protein": "fish", "source": "official menu" },
-        { "name_en": "Prawn Machboos", "name_ar": "مجبوس روبيان", "variants": ["majboos rubian"], "price_aed": 78, "spicy": 2, "protein": "seafood", "source": "official menu" },
-        { "name_en": "Spicy Fish Curry", "name_ar": "كاري سمك حار", "variants": ["fish curry"], "price_aed": 49, "spicy": 3, "protein": "fish", "source": "official menu" },
-        { "name_en": "Chicken Biryani", "name_ar": "برياني دجاج", "variants": ["biriyani"], "price_aed": 44, "spicy": 2, "protein": "chicken", "source": "official menu" }
+        {
+          "name_en": "ShackBurger",
+          "name_ar": "شاك برغر",
+          "variants": [
+            "single",
+            "double"
+          ],
+          "price_aed": 35,
+          "spicy": 0,
+          "protein": "beef",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "SmokeShack",
+          "name_ar": "سموك شاك",
+          "variants": [
+            "single",
+            "double"
+          ],
+          "price_aed": 40,
+          "spicy": 1,
+          "protein": "beef",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Chicken Shack",
+          "name_ar": "تشيكن شاك",
+          "variants": [
+            "chicken"
+          ],
+          "price_aed": 34,
+          "spicy": 0,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Crinkle Cut Fries",
+          "name_ar": "بطاطا مقلية مقطعة مموجة",
+          "variants": [
+            "cheese fries"
+          ],
+          "price_aed": 18,
+          "spicy": 0,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        }
+      ]
+    },
+    {
+      "id": "zuma",
+      "sample": false,
+      "names": {
+        "en": "Zuma",
+        "ar": "زوما",
+        "arabizi": [
+          "zuma",
+          "zuma abu dhabi",
+          "زوما",
+          "zuma galleria"
+        ],
+        "handles": [
+          "@zumaabudhabi",
+          "@zumarestaurant"
+        ]
+      },
+      "area": "The Galleria, Al Maryah Island, Abu Dhabi",
+      "lat": 24.500519,
+      "lng": 54.387861,
+      "hours": "12:00-01:00",
+      "tags": {
+        "family_section": false,
+        "shisha": false,
+        "suhoor": false,
+        "iftar_deal": false,
+        "halal": false,
+        "alcohol": true,
+        "pork": false,
+        "max_group": 14
+      },
+      "price_band": "luxury",
+      "cuisine": [
+        "japanese",
+        "izakaya",
+        "fine dining"
+      ],
+      "links": {
+        "website": "",
+        "instagram": "",
+        "maps": "https://www.google.com/maps/place/?q=place_id:ChIJt9FZilRmXj4RthYToQhIoOA"
+      },
+      "menu": [
+        {
+          "name_en": "Miso Marinated Black Cod",
+          "name_ar": "سمك القد الأسود المتبل بالميسو",
+          "variants": [
+            "black cod"
+          ],
+          "price_aed": 245,
+          "spicy": 0,
+          "protein": "fish",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Spicy Beef Tenderloin",
+          "name_ar": "فيليه لحم بقري حار",
+          "variants": [
+            "sesame and red chilli"
+          ],
+          "price_aed": 210,
+          "spicy": 3,
+          "protein": "beef",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Seared Tuna with Chilli Daikon",
+          "name_ar": "تونة محمرة مع دايكون حار",
+          "variants": [
+            "tuna tataki"
+          ],
+          "price_aed": 155,
+          "spicy": 2,
+          "protein": "tuna",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Roasted Lobster",
+          "name_ar": "كركند مشوي",
+          "variants": [
+            "shiso and ponzu butter"
+          ],
+          "price_aed": 295,
+          "spicy": 0,
+          "protein": "lobster",
+          "source": "sample menu"
+        }
       ]
     }
   ]
