@@ -20,6 +20,9 @@ export default function PlaceCard({
   source?: string;
 }) {
   const tags = place.tags;
+  const menuSource = place.menu.every((m) => m.source === "official menu")
+    ? "official menu"
+    : "sample menu";
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -59,6 +62,7 @@ export default function PlaceCard({
         <Chip>up to {tags.max_group}</Chip>
         <Chip>{place.cuisine.join(", ")}</Chip>
         <Chip>{place.price_band}</Chip>
+        <Chip>menu: {menuSource}</Chip>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] text-zinc-400">

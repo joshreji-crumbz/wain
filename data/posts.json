@@ -216,6 +216,50 @@
         "Seared Tuna with Chilli Daikon",
         "Spicy Beef Tenderloin"
       ]
+    },
+    {
+      "place_id": "al-fanar",
+      "sample": true,
+      "platform": "instagram",
+      "url": "https://example.com/sample-post-16",
+      "creator": "@sample_creator_16",
+      "creator_region": "gulf",
+      "lang": "ar-khaleeji",
+      "posted": "2026-08-21",
+      "transcript": "مجبوس اللحم بـ75 درهم في الفنار وايد زين، والجو تراثي حلو.",
+      "dishes_mentioned": [
+        "Machboos Laham"
+      ]
+    },
+    {
+      "place_id": "al-fanar",
+      "sample": true,
+      "platform": "tiktok",
+      "url": "https://example.com/sample-post-17",
+      "creator": "@sample_creator_17",
+      "creator_region": "gulf",
+      "lang": "arabizi",
+      "posted": "2026-08-15",
+      "transcript": "el fanar 7ada zain, khedt harees b 48 dirham w luqaimat b 28.",
+      "dishes_mentioned": [
+        "Harees",
+        "Luqaimat"
+      ]
+    },
+    {
+      "place_id": "al-fanar",
+      "sample": true,
+      "platform": "instagram",
+      "url": "https://example.com/sample-post-18",
+      "creator": "@sample_creator_18",
+      "creator_region": "other",
+      "lang": "en",
+      "posted": "2026-08-02",
+      "transcript": "Tried the Machboos Laham (75 AED) and Luqaimat (28 AED) at Al Fanar Yas Mall, solid Emirati food.",
+      "dishes_mentioned": [
+        "Machboos Laham",
+        "Luqaimat"
+      ]
     }
   ]
 }

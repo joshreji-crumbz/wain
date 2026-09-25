@@ -714,6 +714,96 @@
           "source": "sample menu"
         }
       ]
+    },
+    {
+      "id": "al-fanar",
+      "sample": false,
+      "names": {
+        "en": "Al Fanar Restaurant & Cafe",
+        "ar": "مطعم ومقهى الفنار",
+        "arabizi": [
+          "al fanar",
+          "el fanar",
+          "fanar",
+          "الفنار",
+          "al fanar yas mall"
+        ],
+        "handles": [
+          "@alfanarrestaurant",
+          "@alfanaruae"
+        ]
+      },
+      "area": "Yas Mall, Yas Island, Abu Dhabi",
+      "lat": 24.4860559,
+      "lng": 54.6077027,
+      "hours": "09:00-22:00",
+      "tags": {
+        "family_section": true,
+        "shisha": false,
+        "suhoor": true,
+        "iftar_deal": true,
+        "halal": true,
+        "alcohol": false,
+        "pork": false,
+        "max_group": 12
+      },
+      "price_band": "mid",
+      "cuisine": [
+        "emirati",
+        "khaleeji",
+        "traditional"
+      ],
+      "links": {
+        "website": "",
+        "instagram": "",
+        "maps": "https://www.google.com/maps/search/?api=1&query=24.4860559,54.6077027"
+      },
+      "menu": [
+        {
+          "name_en": "Machboos Laham",
+          "name_ar": "مجبوس لحم",
+          "variants": [
+            "lamb"
+          ],
+          "price_aed": 75,
+          "spicy": 1,
+          "protein": "lamb",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Chicken Madrouba",
+          "name_ar": "مضروبة دجاج",
+          "variants": [
+            "chicken"
+          ],
+          "price_aed": 55,
+          "spicy": 0,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Harees",
+          "name_ar": "هريس",
+          "variants": [
+            "chicken"
+          ],
+          "price_aed": 48,
+          "spicy": 0,
+          "protein": "chicken",
+          "source": "sample menu"
+        },
+        {
+          "name_en": "Luqaimat",
+          "name_ar": "لقيمات",
+          "variants": [
+            "date syrup"
+          ],
+          "price_aed": 28,
+          "spicy": 0,
+          "protein": "vegetarian",
+          "source": "sample menu"
+        }
+      ]
     }
   ]
 }

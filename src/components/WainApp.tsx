@@ -52,6 +52,15 @@ export default function WainApp() {
   const [posts, setPosts] = useState<RankedPost[]>([]);
   const [mostOrdered, setMostOrdered] = useState<{ dish: string; count: number } | null>(null);
 
+  // Map search — one place, three spellings
+  const [search, setSearch] = useState("");
+  const [searchHit, setSearchHit] = useState<{
+    query: string;
+    matched_on: string;
+    method: string;
+    variants: string[];
+  } | null>(null);
+
   // Chat
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -173,6 +182,37 @@ export default function WainApp() {
     setMessages([...next, { role: "assistant", content: data.reply }]);
     setDishes(data.dishes);
     if (data.register) setDetected(data.register);
+  }
+
+  function selectPlace(p: Place, distanceM: number | null = null) {
+    setActive(p);
+    setDistance(distanceM);
+    setPosts([]);
+    setMostOrdered(null);
+    setMessages([]);
+    setDishes([]);
+  }
+
+  async function runSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!search.trim()) return;
+    const data = await call<{
+      match: { place: Place; method: string; matched_on: string } | null;
+      variants: string[];
+    }>("/api/search", { query: search }, "Matching the name…");
+    if (!data) return;
+    if (!data.match) {
+      setSearchHit(null);
+      setError(`No seeded place matches "${search}".`);
+      return;
+    }
+    selectPlace(data.match.place);
+    setSearchHit({
+      query: search,
+      matched_on: data.match.matched_on,
+      method: data.match.method,
+      variants: data.variants,
+    });
   }
 
   function toggleMic() {
@@ -567,19 +607,39 @@ export default function WainApp() {
           )}
         </div>
 
-        <div className="h-44 w-full shrink-0 border-t border-zinc-200 md:h-auto md:min-w-0 md:flex-1 md:border-t-0">
-          <MapPanel
-            places={places}
-            active={active}
-            onSelect={(p) => {
-              setActive(p);
-              setDistance(null);
-              setPosts([]);
-              setMostOrdered(null);
-              setMessages([]);
-              setDishes([]);
-            }}
-          />
+        <div className="relative h-56 w-full shrink-0 border-t border-zinc-200 md:h-auto md:min-w-0 md:flex-1 md:border-t-0">
+          <MapPanel places={places} active={active} onSelect={(p) => selectPlace(p)} />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] p-2">
+            <form onSubmit={runSearch} className="pointer-events-auto flex gap-2">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="el fanar · الفنار · Al Fanar"
+                dir={isRtl(search) ? "rtl" : "ltr"}
+                className="flex-1 rounded-xl border border-zinc-300 bg-white/95 px-3 py-2 text-sm shadow"
+              />
+              <button
+                type="submit"
+                className="rounded-xl bg-teal-700 px-3 py-2 text-sm font-medium text-white shadow"
+              >
+                find
+              </button>
+            </form>
+            {searchHit && (
+              <div className="pointer-events-auto mt-2 rounded-xl bg-white/95 px-3 py-2 text-[11px] text-zinc-600 shadow">
+                <span className="text-zinc-500">
+                  “{searchHit.query}” → {searchHit.matched_on} ({searchHit.method})
+                </span>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {searchHit.variants.map((v) => (
+                    <span key={v} className="rounded bg-zinc-100 px-1.5 py-0.5">
+                      {v}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
