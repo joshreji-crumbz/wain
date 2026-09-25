@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import GoogleMapView, { type MapMarker } from "./GoogleMapView";
+import { CloseIcon, SearchIcon } from "./icons";
 import type { SearchResult } from "@/lib/types";
-import { isRtl, metres } from "./ui";
+import { dishImage, isRtl, metres } from "./ui";
 
 export default function ExploreScreen({
   results,
@@ -57,25 +59,28 @@ export default function ExploreScreen({
           e.preventDefault();
           onSearch();
         }}
-        className="sticky top-0 z-20 flex gap-2 border-b border-white/10 bg-[#100d0b]/95 px-3 py-2 backdrop-blur"
+        className="sticky top-0 z-20 flex gap-2 border-b border-white/8 bg-[#0B0907]/90 px-3 py-2 backdrop-blur-xl"
       >
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          dir={isRtl(query) ? "rtl" : "ltr"}
-          placeholder="كنتاكي · kentaki · الفنار · shawarma"
-          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm placeholder:text-zinc-500"
-        />
+        <span className="glass flex min-w-0 flex-1 items-center gap-2 rounded-full px-3">
+          <SearchIcon className="h-4 w-4 shrink-0 text-[#A89F94]" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            dir={isRtl(query) ? "rtl" : "ltr"}
+            placeholder="كنتاكي · kentaki · الفنار · shawarma"
+            className="min-w-0 flex-1 bg-transparent py-2 text-sm text-white outline-none placeholder:text-white/45"
+          />
+        </span>
         <button
           type="submit"
           disabled={busy}
-          className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"
+          className="rounded-full bg-[#F2A23A] px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"
         >
           Find
         </button>
       </form>
 
-      {note && <p className="px-4 pt-2 text-[11px] text-zinc-500">{note}</p>}
+      {note && <p className="px-4 pt-2 text-[11px] text-[#A89F94]">{note}</p>}
 
       <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
         {results.map((r) => (
@@ -85,55 +90,60 @@ export default function ExploreScreen({
                 onHighlight(r.id);
                 onOpen(r);
               }}
-              className={`w-full rounded-2xl border p-3 text-left ${
-                r.id === activeId
-                  ? "border-amber-400/70 bg-amber-400/10"
-                  : "border-white/10 bg-white/5"
+              className={`glass flex w-full items-center gap-3 p-3 text-left ${
+                r.id === activeId ? "ring-1 ring-[#F2A23A]/70" : ""
               }`}
             >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="truncate text-sm font-semibold text-zinc-50">
-                  {r.name_en}
-                </span>
-                <span className="shrink-0 text-[11px] text-zinc-500">
-                  {metres(r.distance_m)}
-                </span>
-              </div>
-              {r.name_ar && (
-                <div dir="rtl" className="text-xs text-zinc-400">
-                  {r.name_ar}
-                </div>
-              )}
-              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
-                {r.source === "wain" ? (
-                  <span className="rounded bg-amber-400/20 px-1.5 py-0.5 text-amber-300">
-                    WAIN data
+              <Image
+                src={dishImage(`${r.name_en} ${(r.seed?.cuisine ?? []).join(" ")}`)}
+                alt=""
+                width={56}
+                height={56}
+                className="h-14 w-14 shrink-0 rounded-xl object-cover"
+              />
+              <span className="min-w-0 flex-1">
+                <span className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-sm font-semibold text-white">
+                    {r.name_en}
                   </span>
-                ) : (
-                  <span className="rounded bg-white/10 px-1.5 py-0.5 text-zinc-400">Google</span>
-                )}
-                {r.rating !== null && (
-                  <span className="text-amber-400">★ {r.rating}</span>
-                )}
-                {r.open_now !== null && (
-                  <span className={r.open_now ? "text-emerald-400" : "text-rose-400"}>
-                    {r.open_now ? "open now" : "closed"}
+                  <span className="shrink-0 text-[11px] text-[#A89F94]">
+                    {metres(r.distance_m)}
+                  </span>
+                </span>
+                {r.name_ar && (
+                  <span dir="rtl" className="block truncate text-xs text-[#A89F94]">
+                    {r.name_ar}
                   </span>
                 )}
-                <span className="truncate text-zinc-500">{r.address}</span>
-              </div>
+                <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                  {r.source === "wain" && (
+                    <span className="rounded bg-[#F2A23A]/20 px-1.5 py-0.5 text-[#F2A23A]">
+                      WAIN data
+                    </span>
+                  )}
+                  {r.rating !== null && (
+                    <span className="text-[#F2A23A]">★ {r.rating}</span>
+                  )}
+                  {r.open_now !== null && (
+                    <span className={r.open_now ? "text-emerald-400" : "text-rose-400"}>
+                      ● {r.open_now ? "open now" : "closed"}
+                    </span>
+                  )}
+                  <span className="truncate text-[#A89F94]">{r.address}</span>
+                </span>
+              </span>
             </button>
           </li>
         ))}
         {!results.length && !busy && (
-          <li className="px-1 py-6 text-center text-xs text-zinc-500">
+          <li className="px-1 py-6 text-center text-xs text-[#A89F94]">
             Search for a place, a brand or a dish.
           </li>
         )}
       </ul>
 
       {full && (
-        <div className="fixed inset-0 z-50 bg-[#100d0b]">
+        <div className="fixed inset-0 z-50 bg-[#0B0907]">
           <GoogleMapView
             center={center}
             markers={markers}
@@ -144,9 +154,10 @@ export default function ExploreScreen({
           />
           <button
             onClick={() => setFull(false)}
-            className="absolute right-4 top-4 rounded-full bg-[#100d0b]/90 px-4 py-2 text-sm font-semibold text-zinc-100 shadow"
+            aria-label="Close map"
+            className="absolute right-4 top-4 rounded-full bg-[#0B0907]/90 p-2.5 text-white shadow backdrop-blur"
           >
-            ✕ Close
+            <CloseIcon />
           </button>
           {highlighted && (
             <button
@@ -154,7 +165,7 @@ export default function ExploreScreen({
                 setFull(false);
                 onOpen(highlighted);
               }}
-              className="absolute inset-x-4 bottom-6 rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-black shadow"
+              className="absolute inset-x-4 bottom-6 rounded-2xl bg-[#F2A23A] px-4 py-3 text-sm font-semibold text-black shadow"
             >
               Open {highlighted.name_en}
             </button>

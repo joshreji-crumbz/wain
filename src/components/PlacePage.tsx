@@ -3,8 +3,22 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import ChatDock from "./ChatDock";
+import {
+  BackIcon,
+  BookmarkIcon,
+  ChevronIcon,
+  DirectionsIcon,
+  DotsIcon,
+  InstagramIcon,
+  MenuIcon,
+  PhoneIcon,
+  PlayIcon,
+  ShareIcon,
+  VerifiedIcon,
+  WebsiteIcon,
+} from "./icons";
 import type { ChatMessage, MenuItem, Post, SearchResult } from "@/lib/types";
-import { isRtl, metres } from "./ui";
+import { dishImage, isRtl, metres } from "./ui";
 
 export type Enrichment = {
   google: {
@@ -22,32 +36,42 @@ export type Enrichment = {
   } | null;
   socials: { instagram: string; tiktok: string; menu_links: string[] } | null;
   photo: string | null;
+  photos?: string[];
 };
 
 export type RankedPost = Post & { summary: string };
 
-const CHIPS: { id: string; label: string; test: (m: MenuItem) => boolean }[] = [
-  { id: "spicy", label: "🌶 spicy", test: (m) => m.spicy >= 2 },
-  { id: "cheap", label: "under 50 AED", test: (m) => m.price_aed < 50 },
-  { id: "chicken", label: "chicken", test: (m) => /chicken|دجاج/i.test(m.protein + m.name_ar) },
-  { id: "veg", label: "no meat", test: (m) => /veg|none|cheese/i.test(m.protein) },
-];
+/** What the camera produced, when the user arrived here from a photo. */
+export type Saw = {
+  photo: string;
+  dish: string | null;
+  item: { name_en: string; price_aed: number } | null;
+};
 
-function Action({ href, icon, label }: { href: string; icon: string; label: string }) {
-  const disabled = !href;
+function Action({
+  href,
+  icon,
+  label,
+  primary,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  primary?: boolean;
+}) {
+  if (!href) return null;
   return (
     <a
-      href={href || undefined}
+      href={href}
       target={href.startsWith("http") ? "_blank" : undefined}
       rel="noreferrer"
-      aria-disabled={disabled}
-      className={`flex flex-1 flex-col items-center gap-1 rounded-xl border px-2 py-2 text-[11px] ${
-        disabled
-          ? "pointer-events-none border-white/5 text-zinc-600"
-          : "border-white/15 text-zinc-200"
+      className={`flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-3 text-[11px] font-medium ${
+        primary
+          ? "bg-[#F2A23A] text-black"
+          : "glass text-white/90"
       }`}
     >
-      <span className="text-base leading-none">{icon}</span>
+      {icon}
       {label}
     </a>
   );
@@ -58,14 +82,20 @@ export default function PlacePage({
   enrich,
   posts,
   mostOrdered,
+  saw,
   onBack,
+  onOtherBranches,
+  otherBranches,
   chat,
 }: {
   result: SearchResult;
   enrich: Enrichment | null;
   posts: RankedPost[];
   mostOrdered: { dish: string; count: number } | null;
+  saw: Saw | null;
   onBack: () => void;
+  onOtherBranches?: () => void;
+  otherBranches?: number;
   chat: {
     messages: ChatMessage[];
     dishes: MenuItem[];
@@ -77,15 +107,8 @@ export default function PlacePage({
     busy: boolean;
   };
 }) {
-  const [chips, setChips] = useState<string[]>([]);
+  const [fullMenu, setFullMenu] = useState(false);
   const menu = useMemo(() => result.seed?.menu ?? [], [result.seed]);
-
-  const filtered = useMemo(() => {
-    if (!chips.length) return menu;
-    return menu.filter((m) =>
-      chips.every((c) => CHIPS.find((chip) => chip.id === c)?.test(m) ?? true),
-    );
-  }, [chips, menu]);
 
   const g = enrich?.google;
   const rating = result.rating ?? g?.rating ?? null;
@@ -94,187 +117,306 @@ export default function PlacePage({
     g?.maps ||
     result.seed?.links.maps ||
     `https://www.google.com/maps/search/?api=1&query=${result.lat},${result.lng}`;
-  const menuLink = enrich?.socials?.menu_links[0] || g?.website || result.seed?.links.website || "";
+  const menuLink = enrich?.socials?.menu_links[0] || result.seed?.links.website || "";
   const instagram = enrich?.socials?.instagram || result.seed?.links.instagram || "";
+  const website = g?.website || result.seed?.links.website || "";
   const phone = g?.phone ? `tel:${g.phone.replace(/\s/g, "")}` : "";
+  const hero = enrich?.photo ?? saw?.photo ?? null;
+  const thumbs = (enrich?.photos ?? []).filter((p) => p !== hero).slice(0, 2);
+  const priceBand =
+    result.seed?.price_band ??
+    { PRICE_LEVEL_INEXPENSIVE: "$", PRICE_LEVEL_MODERATE: "$$", PRICE_LEVEL_EXPENSIVE: "$$$", PRICE_LEVEL_VERY_EXPENSIVE: "$$$$" }[
+      g?.price_level ?? ""
+    ] ??
+    "";
+  const cuisine = (result.seed?.cuisine ?? []).slice(0, 2).join(" · ");
+  const meta = [result.address.split(",")[0], result.distance_m !== null ? metres(result.distance_m) : null]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[#100d0b] text-zinc-100">
-      <div className="flex items-center gap-3 border-b border-white/10 px-3 py-3">
-        <button onClick={onBack} className="text-sm text-zinc-400">
-          ← Back
-        </button>
-        <span className="truncate text-sm text-zinc-500">{result.address}</span>
-      </div>
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#0B0907] text-white">
+      <div className="min-h-0 flex-1 overflow-y-auto pb-2">
+        <div className="relative h-60 w-full">
+          {hero ? (
+            <Image
+              src={hero}
+              alt={result.name_en}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-b from-[#2a1f14] to-[#0B0907]" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-[#0B0907]" />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4">
-        <header className="mt-4 rounded-3xl border border-amber-400/15 bg-gradient-to-b from-amber-400/[0.12] to-white/[0.03] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur">
-          <h1 className="text-2xl font-semibold text-zinc-50">{result.name_en}</h1>
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between px-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+            <button
+              onClick={onBack}
+              aria-label="Back"
+              className="rounded-full bg-black/40 p-2 text-white backdrop-blur"
+            >
+              <BackIcon />
+            </button>
+            <div className="flex gap-2 text-white">
+              <span className="rounded-full bg-black/40 p-2 backdrop-blur">
+                <BookmarkIcon />
+              </span>
+              <span className="rounded-full bg-black/40 p-2 backdrop-blur">
+                <ShareIcon />
+              </span>
+              <span className="rounded-full bg-black/40 p-2 backdrop-blur">
+                <DotsIcon />
+              </span>
+            </div>
+          </div>
+
+          {thumbs.length > 0 && (
+            <div className="absolute bottom-16 right-3 flex gap-2">
+              {thumbs.map((t) => (
+                <Image
+                  key={t}
+                  src={t}
+                  alt=""
+                  width={64}
+                  height={80}
+                  unoptimized
+                  className="h-20 w-16 rounded-xl border border-white/20 object-cover"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="-mt-6 px-4">
+          <h1 className="flex items-center gap-2 text-[26px] font-bold leading-tight">
+            {result.name_en}
+            {result.source === "wain" && (
+              <VerifiedIcon className="h-5 w-5 text-[#F2A23A]" />
+            )}
+          </h1>
           {result.name_ar && (
-            <p dir="rtl" className="text-lg text-amber-300">
+            <p dir="rtl" className="text-lg text-[#A89F94]">
               {result.name_ar}
             </p>
           )}
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-            {result.distance_m !== null && (
-              <span className="text-zinc-400">{metres(result.distance_m)} away</span>
+          <p className="mt-1 truncate text-sm text-[#A89F94]">{meta}</p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm">
+            {priceBand && <span className="text-[#A89F94]">{priceBand}</span>}
+            {cuisine && <span className="text-[#A89F94]">{cuisine}</span>}
+            {rating !== null && (
+              <span className="text-[#F2A23A]">
+                ★ {rating}
+                {result.ratings_count ? (
+                  <span className="text-[#A89F94]"> ({result.ratings_count})</span>
+                ) : null}
+              </span>
             )}
-            {rating !== null && <span className="text-amber-400">★ {rating}</span>}
             {openNow !== null && (
               <span className={openNow ? "text-emerald-400" : "text-rose-400"}>
-                {openNow ? "open now" : "closed"}
+                ● {openNow ? "Open now" : "Closed"}
               </span>
             )}
-            {result.source === "wain" && (
-              <span className="rounded bg-amber-400/20 px-1.5 py-0.5 text-amber-300">
-                WAIN data
-              </span>
-            )}
+          </p>
+
+          <div className="mt-4 flex gap-2">
+            <Action
+              href={maps}
+              icon={<DirectionsIcon />}
+              label="Directions"
+              primary
+            />
+            <Action href={menuLink} icon={<MenuIcon />} label="Menu" />
+            <Action href={instagram} icon={<InstagramIcon />} label="Instagram" />
+            <Action
+              href={website || phone}
+              icon={website ? <WebsiteIcon /> : <PhoneIcon />}
+              label={website ? "Website" : "Call"}
+            />
           </div>
-        </header>
 
-        {enrich?.photo && (
-          <Image
-            src={enrich.photo}
-            alt={result.name_en}
-            width={640}
-            height={320}
-            unoptimized
-            className="mt-3 h-36 w-full rounded-2xl object-cover"
-          />
-        )}
+          {otherBranches ? (
+            <button
+              onClick={onOtherBranches}
+              className="mt-3 flex w-full items-center justify-between rounded-2xl px-1 text-sm text-[#F2A23A]"
+            >
+              {otherBranches} other branches nearby
+              <ChevronIcon className="h-4 w-4" />
+            </button>
+          ) : null}
 
-        <div className="mt-3 flex gap-2">
-          <Action href={maps} icon="➤" label="Directions" />
-          <Action href={menuLink} icon="🍽" label="Menu" />
-          <Action href={instagram} icon="◎" label="Instagram" />
-          <Action href={phone} icon="✆" label="Call" />
-        </div>
-
-        <section className="mt-5">
-          <h2 className="text-sm font-semibold text-zinc-200">What to order</h2>
-          {menu.length === 0 ? (
-            <p className="mt-2 text-xs text-zinc-500">
-              I don&apos;t have their menu yet — ask below for distance, hours, rating or
-              directions.
-            </p>
-          ) : (
-            <>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {CHIPS.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() =>
-                      setChips((v) =>
-                        v.includes(c.id) ? v.filter((x) => x !== c.id) : [...v, c.id],
-                      )
-                    }
-                    className={`rounded-full px-3 py-1 text-xs ${
-                      chips.includes(c.id)
-                        ? "bg-amber-500 text-black"
-                        : "border border-white/15 text-zinc-400"
-                    }`}
-                  >
-                    {c.label}
-                  </button>
-                ))}
+          {saw && (
+            <section className="mt-5">
+              <h2 className="text-[15px] font-semibold">You saw</h2>
+              <div className="glass mt-2 flex items-center gap-3 p-3">
+                <Image
+                  src={saw.photo}
+                  alt=""
+                  width={56}
+                  height={56}
+                  unoptimized
+                  className="h-14 w-14 rounded-xl object-cover"
+                />
+                <div className="min-w-0 flex-1 text-sm">
+                  {saw.item ? (
+                    <>
+                      <p className="text-[#A89F94]">This looks like their</p>
+                      <p className="truncate font-semibold">{saw.item.name_en}</p>
+                      <p className="text-[#A89F94]">
+                        AED {saw.item.price_aed} (from menu)
+                      </p>
+                    </>
+                  ) : (
+                    <p className="truncate">
+                      <span className="text-[#A89F94]">You saw: </span>
+                      {saw.dish ?? "this place"}
+                    </p>
+                  )}
+                </div>
+                <ChevronIcon className="h-5 w-5 shrink-0 text-[#A89F94]" />
               </div>
-              <ul className="mt-2 space-y-1">
-                {filtered.map((m) => (
+            </section>
+          )}
+
+          <section className="mt-5">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-[15px] font-semibold">What to try</h2>
+              {menu.length > 0 && (
+                <button
+                  onClick={() => setFullMenu((v) => !v)}
+                  className="text-xs text-[#F2A23A]"
+                >
+                  {fullMenu ? "Show less" : "See full menu →"}
+                </button>
+              )}
+            </div>
+
+            {menu.length === 0 ? (
+              <button
+                onClick={() => chat.send("شو عندهم؟ what do you know about this place?")}
+                className="glass mt-2 flex w-full items-center justify-between p-4 text-left text-sm"
+              >
+                No menu yet — ask WAIN
+                <ChevronIcon className="h-4 w-4 text-[#A89F94]" />
+              </button>
+            ) : fullMenu ? (
+              <ul className="mt-2 space-y-1.5">
+                {menu.map((m) => (
                   <li
                     key={m.name_en}
-                    className="flex items-center justify-between rounded-2xl border border-amber-400/10 bg-gradient-to-b from-white/[0.08] to-white/[0.02] px-3 py-2.5 text-sm backdrop-blur"
+                    className="glass flex items-center justify-between px-3 py-2.5 text-sm"
                   >
-                    <span>
+                    <span className="min-w-0 truncate">
                       {m.name_en} <span dir="rtl">· {m.name_ar}</span>
-                      <span className="ml-2 text-[11px] text-zinc-500">{m.source}</span>
                     </span>
-                    <span className="font-semibold text-amber-400">{m.price_aed} AED</span>
+                    <span className="shrink-0 font-semibold text-[#F2A23A]">
+                      AED {m.price_aed}
+                    </span>
                   </li>
                 ))}
-                {!filtered.length && (
-                  <li className="text-xs text-zinc-500">Nothing on the menu fits those filters.</li>
-                )}
               </ul>
-            </>
-          )}
-        </section>
-
-        {posts.length > 0 && (
-          <section className="mt-5">
-            <h2 className="text-sm font-semibold text-zinc-200">
-              Who&apos;s been here <span className="text-zinc-500">مين راح هناك؟</span>
-            </h2>
-            {mostOrdered && (
-              <div className="mt-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-200">
-                most ordered: <b>{mostOrdered.dish}</b>, {mostOrdered.count} posts
-              </div>
+            ) : (
+              <ul className="no-scrollbar mt-2 flex gap-3 overflow-x-auto pb-1">
+                {menu.slice(0, 8).map((m) => (
+                  <li key={m.name_en} className="w-32 shrink-0">
+                    <Image
+                      src={dishImage(`${m.name_en} ${m.name_ar}`)}
+                      alt={m.name_en}
+                      width={160}
+                      height={120}
+                      className="h-24 w-32 rounded-2xl object-cover"
+                    />
+                    <p className="mt-1.5 truncate text-[13px] font-medium">
+                      {m.name_en}
+                    </p>
+                    <p className="text-[12px] text-[#A89F94]">AED {m.price_aed}</p>
+                  </li>
+                ))}
+              </ul>
             )}
-            <ul className="mt-2 space-y-2">
-              {posts.map((p) => (
-                <li key={p.url} className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
-                    <span className="rounded bg-white/10 px-1.5 py-0.5">{p.lang}</span>
-                    <span className="rounded bg-white/10 px-1.5 py-0.5">{p.creator_region}</span>
-                    <span>{p.creator}</span>
-                    {p.sample && (
-                      <span className="rounded bg-amber-400/20 px-1.5 py-0.5 text-amber-300">
-                        sample
+          </section>
+
+          {posts.length > 0 && (
+            <section className="mt-5">
+              <div className="flex items-baseline justify-between">
+                <h2 className="text-[15px] font-semibold">Seen on social</h2>
+                {mostOrdered && (
+                  <span className="text-xs text-[#A89F94]">
+                    most ordered: {mostOrdered.dish}
+                  </span>
+                )}
+              </div>
+              <ul className="no-scrollbar mt-2 flex gap-3 overflow-x-auto pb-1">
+                {posts.map((p) => (
+                  <li key={p.url} className="w-32 shrink-0">
+                    <a href={p.url} target="_blank" rel="noreferrer">
+                      <span className="relative block">
+                        <Image
+                          src={dishImage(p.summary)}
+                          alt=""
+                          width={160}
+                          height={200}
+                          className="h-36 w-32 rounded-2xl object-cover"
+                        />
+                        <span className="absolute inset-0 rounded-2xl bg-black/25" />
+                        <span className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white">
+                          <PlayIcon className="h-3.5 w-3.5" />
+                        </span>
+                        {p.sample && (
+                          <span className="absolute left-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-[#F2A23A]">
+                            sample
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </div>
-                  <p dir={isRtl(p.summary) ? "rtl" : "ltr"} className="mt-1.5 text-sm text-zinc-100">
-                    {p.summary}
-                  </p>
-                  <a
-                    href={p.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 inline-block text-[11px] text-amber-400 underline"
-                  >
-                    original on {p.platform}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+                      <p className="mt-1.5 truncate text-[13px]">{p.creator}</p>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
-        {g?.reviews?.length ? (
-          <section className="mt-5 pb-4">
-            <h2 className="text-sm font-semibold text-zinc-200">
-              Google reviews <span className="text-[11px] text-zinc-500">live</span>
-            </h2>
-            <ul className="mt-2 space-y-2">
-              {g.reviews.map((r) => (
-                <li key={r.author + r.text.slice(0, 12)} className="text-xs text-zinc-400">
-                  <span className="text-amber-400">★ {r.rating}</span> {r.author}
-                  <p dir={isRtl(r.text) ? "rtl" : "ltr"} className="mt-0.5 text-zinc-300">
-                    {r.text.slice(0, 180)}
-                    {r.text.length > 180 ? "…" : ""}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+          {g?.reviews?.length ? (
+            <section className="mt-5">
+              <h2 className="text-[15px] font-semibold">Google reviews</h2>
+              <ul className="mt-2 space-y-2">
+                {g.reviews.slice(0, 3).map((r) => (
+                  <li key={r.author + r.text.slice(0, 12)} className="glass p-3 text-xs">
+                    <span className="text-[#F2A23A]">★ {r.rating}</span>{" "}
+                    <span className="text-[#A89F94]">{r.author}</span>
+                    <p
+                      dir={isRtl(r.text) ? "rtl" : "ltr"}
+                      className="mt-1 text-[13px] text-white/85"
+                    >
+                      {r.text.slice(0, 170)}
+                      {r.text.length > 170 ? "…" : ""}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
-        <div className="space-y-2 pb-2 pt-4">
-          {chat.messages.map((m, i) => (
-            <div
-              key={i}
-              dir={isRtl(m.content) ? "rtl" : "ltr"}
-              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                m.role === "user" ? "ml-auto bg-amber-500 text-black" : "bg-white/10 text-zinc-100"
-              }`}
-            >
-              {m.content}
-            </div>
-          ))}
+          <div className="space-y-2 pb-4 pt-5">
+            {chat.messages.map((m, i) => (
+              <div
+                key={i}
+                dir={isRtl(m.content) ? "rtl" : "ltr"}
+                className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                  m.role === "user"
+                    ? "ml-auto bg-[#F2A23A] text-black"
+                    : "glass text-white"
+                }`}
+              >
+                {m.content}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="border-t border-white/10 px-3">
+      <div className="border-t border-white/8 bg-[#0B0907]/95 px-3 backdrop-blur">
         <ChatDock
           pinned
           messages={chat.messages}

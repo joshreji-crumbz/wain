@@ -43,10 +43,13 @@ export async function POST(request: Request) {
 
   if (!google) return Response.json({ google: null, socials: null, photo: null });
 
-  const [photo, socials] = await Promise.all([
-    google.photos?.[0] ? photoUrl(google.photos[0].name) : Promise.resolve(null),
+  const [photos, socials] = await Promise.all([
+    Promise.all(
+      (google.photos ?? []).slice(0, 3).map((p) => photoUrl(p.name).catch(() => null)),
+    ),
     siteLinks(google.websiteUri ?? ""),
   ]);
+  const gallery = photos.filter((p): p is string => !!p);
 
   return Response.json({
     google: {
@@ -68,7 +71,8 @@ export async function POST(request: Request) {
       })),
     },
     socials,
-    photo,
+    photo: gallery[0] ?? null,
+    photos: gallery,
     source: "Google Places",
   });
 }
