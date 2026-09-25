@@ -1,28 +1,11 @@
 import { normaliseQuery } from "@/lib/brands";
-import { distanceMeters, places } from "@/lib/data";
+import { places } from "@/lib/data";
 import { searchText } from "@/lib/google";
 import { matchPlace, normaliseName } from "@/lib/normalise";
+import { googleRow, seedRow } from "@/lib/results";
 import type { Place, SearchResult } from "@/lib/types";
 
 const RADIUS_M = 5000;
-
-function seedRow(place: Place, origin: { lat: number; lng: number } | null): SearchResult {
-  return {
-    source: "wain",
-    id: place.id,
-    place_id: place.id,
-    name_en: place.names.en,
-    name_ar: place.names.ar,
-    address: place.area,
-    lat: place.lat,
-    lng: place.lng,
-    distance_m: origin ? Math.round(distanceMeters(origin, place)) : null,
-    open_now: null,
-    rating: null,
-    ratings_count: null,
-    seed: place,
-  };
-}
 
 /** Seeded places whose name, Arabic name, Arabizi or cuisine matches the query. */
 function seedMatches(query: string): Place[] {
@@ -76,25 +59,8 @@ export async function POST(request: Request) {
     try {
       const found = await searchText(normalised.query, origin, RADIUS_M, 12);
       google = found
-        .filter((g) => g.location)
-        .map((g) => {
-          const point = { lat: g.location!.latitude, lng: g.location!.longitude };
-          return {
-            source: "google" as const,
-            id: g.id,
-            place_id: g.id,
-            name_en: g.displayName?.text ?? "",
-            name_ar: "",
-            address: g.formattedAddress ?? "",
-            lat: point.lat,
-            lng: point.lng,
-            distance_m: Math.round(distanceMeters(origin, point)),
-            open_now: g.regularOpeningHours?.openNow ?? null,
-            rating: g.rating ?? null,
-            ratings_count: g.userRatingCount ?? null,
-            seed: null,
-          };
-        })
+        .map((g) => googleRow(g, origin))
+        .filter((g): g is SearchResult => !!g)
         .filter((g) => (g.distance_m ?? 0) <= RADIUS_M)
         .filter(
           (g) =>

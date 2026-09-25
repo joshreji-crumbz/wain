@@ -1,16 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import type { Place } from "@/lib/types";
+import Analyzing from "./Analyzing";
+import type { SearchResult } from "@/lib/types";
 import { metres } from "./ui";
 
-export type DishSearch = {
-  dish: { dish_en: string; dish_ar: string };
+export type PhotoOutcome = {
+  tier: "brand" | "dish" | "unclear";
+  evidence: string;
+  brand: string | null;
+  dish: { dish_en: string; dish_ar: string } | null;
+  question?: string;
   radius_m: number;
-  places: {
-    place: Place;
-    distance_m: number;
-    reason: string;
+  results: SearchResult[];
+  matches?: {
+    place_id: string;
     matched_items: { name_en: string; name_ar: string; price_aed: number }[];
   }[];
 };
@@ -18,12 +22,9 @@ export type DishSearch = {
 export default function HomeScreen({
   photo,
   onPhotoPicked,
-  onIdentify,
-  onFindDish,
-  signText,
-  dishHits,
-  onOpenSeed,
-  busy,
+  analyzing,
+  outcome,
+  onOpen,
   gpsStatus,
   lat,
   lng,
@@ -32,15 +33,13 @@ export default function HomeScreen({
   showManualGps,
   setShowManualGps,
   onPasteReel,
+  onAsk,
 }: {
   photo: string | null;
   onPhotoPicked: (file: File) => void;
-  onIdentify: () => void;
-  onFindDish: () => void;
-  signText: { ar: string; en: string } | null;
-  dishHits: DishSearch | null;
-  onOpenSeed: (place: Place, distanceM: number | null) => void;
-  busy: boolean;
+  analyzing: boolean;
+  outcome: PhotoOutcome | null;
+  onOpen: (result: SearchResult) => void;
   gpsStatus: string;
   lat: string;
   lng: string;
@@ -49,7 +48,15 @@ export default function HomeScreen({
   showManualGps: boolean;
   setShowManualGps: (v: boolean) => void;
   onPasteReel: () => void;
+  onAsk: () => void;
 }) {
+  const heading =
+    outcome?.tier === "brand"
+      ? `${outcome.brand} near you`
+      : outcome?.tier === "dish"
+        ? `${outcome.dish?.dish_en} within ${outcome.radius_m / 1000} km`
+        : null;
+
   return (
     <section className="space-y-3 p-4">
       {!photo && (
@@ -92,7 +99,7 @@ export default function HomeScreen({
       </div>
 
       <p className="text-xs text-zinc-500">
-        Storefront → we read the Arabic/English sign and cross-check GPS. A plate of food → we
+        A sign, a cup or a bag → we find that brand&apos;s nearest branches. A plate of food → we
         find who serves it within 5 km.
       </p>
 
@@ -126,63 +133,70 @@ export default function HomeScreen({
       )}
 
       {photo && (
-        <>
-          <div className="flex gap-2">
-            <button
-              onClick={onIdentify}
-              disabled={busy}
-              className="flex-1 rounded-xl bg-amber-500 px-3 py-3 text-sm font-semibold text-black disabled:opacity-40"
-            >
-              It&apos;s a storefront
-            </button>
-            <button
-              onClick={onFindDish}
-              disabled={busy}
-              className="flex-1 rounded-xl border border-white/15 px-3 py-3 text-sm font-medium text-zinc-200 disabled:opacity-40"
-            >
-              It&apos;s a dish
-            </button>
-          </div>
-          <Image
-            src={photo}
-            alt="capture"
-            width={640}
-            height={360}
-            unoptimized
-            className="max-h-48 w-auto rounded-xl border border-white/10 object-cover"
-          />
-        </>
+        <Image
+          src={photo}
+          alt="capture"
+          width={640}
+          height={360}
+          unoptimized
+          className="max-h-44 w-full rounded-2xl border border-white/10 object-cover"
+        />
       )}
 
-      {signText && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-zinc-300">
-          <div>sign (en): {signText.en || "—"}</div>
-          <div dir="rtl">sign (ar): {signText.ar || "—"}</div>
-        </div>
-      )}
+      {(analyzing || outcome) && <Analyzing done={!analyzing} />}
 
-      {dishHits && dishHits.places.length > 0 && (
+      {outcome && !analyzing && (
         <div className="space-y-2">
-          <div className="text-xs text-zinc-500">
-            {dishHits.dish.dish_en} · {dishHits.dish.dish_ar} — within {dishHits.radius_m / 1000} km
-          </div>
-          {dishHits.places.map((h) => (
-            <button
-              key={h.place.id}
-              onClick={() => onOpenSeed(h.place, h.distance_m)}
-              className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-left text-xs hover:border-amber-400/60"
-            >
-              <div className="flex justify-between font-medium text-zinc-100">
-                <span>{h.place.names.en}</span>
-                <span className="text-zinc-500">{metres(h.distance_m)}</span>
-              </div>
-              <div className="text-zinc-400">
-                {h.matched_items.length
-                  ? h.matched_items.map((m) => `${m.name_en} · AED ${m.price_aed}`).join(" · ")
-                  : `${h.place.cuisine.join(", ")} — matched on cuisine`}
-              </div>
-            </button>
-          ))}
+          <p className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-200">
+            {outcome.evidence}
+          </p>
+
+          {outcome.tier === "unclear" ? (
+            <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-zinc-300">
+              <p>{outcome.question}</p>
+              <button onClick={onAsk} className="mt-2 text-xs text-amber-400 underline">
+                Type it instead
+              </button>
+            </div>
+          ) : (
+            <>
+              {heading && <div className="text-xs text-zinc-500">{heading}</div>}
+              {outcome.results.map((r) => {
+                const hit = outcome.matches?.find((m) => m.place_id === r.id);
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => onOpen(r)}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-left text-xs hover:border-amber-400/60"
+                  >
+                    <div className="flex justify-between font-medium text-zinc-100">
+                      <span>
+                        {r.name_en}
+                        {r.source === "wain" && (
+                          <span className="ml-2 rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] text-amber-300">
+                            WAIN data
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-zinc-500">
+                        {r.distance_m !== null ? metres(r.distance_m) : ""}
+                      </span>
+                    </div>
+                    <div className="text-zinc-400">
+                      {hit?.matched_items.length
+                        ? hit.matched_items
+                            .map((m) => `${m.name_en} · AED ${m.price_aed}`)
+                            .join(" · ")
+                        : r.address}
+                    </div>
+                  </button>
+                );
+              })}
+              {!outcome.results.length && (
+                <p className="text-xs text-zinc-500">Nothing within 5 km matched that.</p>
+              )}
+            </>
+          )}
         </div>
       )}
     </section>

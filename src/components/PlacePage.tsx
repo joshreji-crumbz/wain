@@ -108,7 +108,7 @@ export default function PlacePage({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-4">
-        <header className="pt-4">
+        <header className="mt-4 rounded-3xl border border-amber-400/15 bg-gradient-to-b from-amber-400/[0.12] to-white/[0.03] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur">
           <h1 className="text-2xl font-semibold text-zinc-50">{result.name_en}</h1>
           {result.name_ar && (
             <p dir="rtl" className="text-lg text-amber-300">
@@ -155,7 +155,8 @@ export default function PlacePage({
           <h2 className="text-sm font-semibold text-zinc-200">What to order</h2>
           {menu.length === 0 ? (
             <p className="mt-2 text-xs text-zinc-500">
-              No menu yet for this place — ask below and WAIN answers from what Google knows.
+              I don&apos;t have their menu yet — ask below for distance, hours, rating or
+              directions.
             </p>
           ) : (
             <>
@@ -182,7 +183,7 @@ export default function PlacePage({
                 {filtered.map((m) => (
                   <li
                     key={m.name_en}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm"
+                    className="flex items-center justify-between rounded-2xl border border-amber-400/10 bg-gradient-to-b from-white/[0.08] to-white/[0.02] px-3 py-2.5 text-sm backdrop-blur"
                   >
                     <span>
                       {m.name_en} <span dir="rtl">· {m.name_ar}</span>
@@ -199,46 +200,45 @@ export default function PlacePage({
           )}
         </section>
 
-        <section className="mt-5">
-          <h2 className="text-sm font-semibold text-zinc-200">
-            Who&apos;s been here <span className="text-zinc-500">مين راح هناك؟</span>
-          </h2>
-          {mostOrdered && (
-            <div className="mt-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-200">
-              most ordered: <b>{mostOrdered.dish}</b>, {mostOrdered.count} posts
-            </div>
-          )}
-          <ul className="mt-2 space-y-2">
-            {posts.map((p) => (
-              <li key={p.url} className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
-                  <span className="rounded bg-white/10 px-1.5 py-0.5">{p.lang}</span>
-                  <span className="rounded bg-white/10 px-1.5 py-0.5">{p.creator_region}</span>
-                  <span>{p.creator}</span>
-                  {p.sample && (
-                    <span className="rounded bg-amber-400/20 px-1.5 py-0.5 text-amber-300">
-                      sample
-                    </span>
-                  )}
-                </div>
-                <p dir={isRtl(p.summary) ? "rtl" : "ltr"} className="mt-1.5 text-sm text-zinc-100">
-                  {p.summary}
-                </p>
-                <a
-                  href={p.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 inline-block text-[11px] text-amber-400 underline"
-                >
-                  original on {p.platform}
-                </a>
-              </li>
-            ))}
-            {!posts.length && (
-              <li className="text-xs text-zinc-500">No creator posts for this place yet.</li>
+        {posts.length > 0 && (
+          <section className="mt-5">
+            <h2 className="text-sm font-semibold text-zinc-200">
+              Who&apos;s been here <span className="text-zinc-500">مين راح هناك؟</span>
+            </h2>
+            {mostOrdered && (
+              <div className="mt-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-200">
+                most ordered: <b>{mostOrdered.dish}</b>, {mostOrdered.count} posts
+              </div>
             )}
-          </ul>
-        </section>
+            <ul className="mt-2 space-y-2">
+              {posts.map((p) => (
+                <li key={p.url} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
+                    <span className="rounded bg-white/10 px-1.5 py-0.5">{p.lang}</span>
+                    <span className="rounded bg-white/10 px-1.5 py-0.5">{p.creator_region}</span>
+                    <span>{p.creator}</span>
+                    {p.sample && (
+                      <span className="rounded bg-amber-400/20 px-1.5 py-0.5 text-amber-300">
+                        sample
+                      </span>
+                    )}
+                  </div>
+                  <p dir={isRtl(p.summary) ? "rtl" : "ltr"} className="mt-1.5 text-sm text-zinc-100">
+                    {p.summary}
+                  </p>
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block text-[11px] text-amber-400 underline"
+                  >
+                    original on {p.platform}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {g?.reviews?.length ? (
           <section className="mt-5 pb-4">

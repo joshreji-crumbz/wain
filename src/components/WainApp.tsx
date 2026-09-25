@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import BottomNav, { type Tab } from "./BottomNav";
 import ChatDock from "./ChatDock";
 import ExploreScreen from "./ExploreScreen";
-import HomeScreen, { type DishSearch } from "./HomeScreen";
+import HomeScreen, { type PhotoOutcome } from "./HomeScreen";
 import PlacePage, { type Enrichment, type RankedPost } from "./PlacePage";
 import ReelSheet from "./ReelSheet";
 import { Spinner } from "./ui";
@@ -58,8 +58,8 @@ export default function WainApp() {
 
   // Home — camera
   const [photo, setPhoto] = useState<string | null>(null);
-  const [signText, setSignText] = useState<{ ar: string; en: string } | null>(null);
-  const [dishHits, setDishHits] = useState<DishSearch | null>(null);
+  const [outcome, setOutcome] = useState<PhotoOutcome | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
 
   // Reel
   const [reelOpen, setReelOpen] = useState(false);
@@ -206,42 +206,36 @@ export default function WainApp() {
     setMostOrdered(data.most_ordered);
   }, []);
 
+  // The photo route decides brand vs dish vs unclear itself, so the capture
+  // runs straight into analysis with no "is this a storefront?" question.
+  async function analysePhoto(image: string) {
+    setOutcome(null);
+    setAnalyzing(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image, ...origin }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "request failed");
+      setOutcome(data as PhotoOutcome);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
   function onPhotoPicked(file: File) {
     const reader = new FileReader();
-    reader.onload = () => setPhoto(reader.result as string);
+    reader.onload = () => {
+      const image = reader.result as string;
+      setPhoto(image);
+      analysePhoto(image);
+    };
     reader.readAsDataURL(file);
-  }
-
-  async function identifyPhoto() {
-    if (!photo) return;
-    const data = await call<{
-      sign: { sign_text_ar: string; sign_text_en: string };
-      match: { place: Place; distance_m: number; confidence: number } | null;
-    }>("/api/photo", { image: photo, ...origin }, "Reading the sign…");
-    if (!data) return;
-    setDishHits(null);
-    setSignText({ ar: data.sign.sign_text_ar, en: data.sign.sign_text_en });
-    if (data.match) openPlace(seedToResult(data.match.place, data.match.distance_m));
-    else setError("No place within 500 m matched that sign.");
-  }
-
-  async function findDish() {
-    if (!photo) return;
-    const data = await call<DishSearch>(
-      "/api/dish",
-      { image: photo, ...origin },
-      "Identifying the dish…",
-    );
-    if (!data) return;
-    setSignText(null);
-    setDishHits(data);
-    if (!data.places.length) {
-      setError(
-        data.dish.dish_en
-          ? `No place within 5 km serves ${data.dish.dish_en} in our data.`
-          : "That photo doesn't look like food.",
-      );
-    }
   }
 
   async function ingestReel() {
@@ -275,6 +269,7 @@ export default function WainApp() {
         placeId: active?.source === "wain" ? active.id : undefined,
         history: messages,
         nearby: active?.source === "wain" ? undefined : active ? [active, ...results] : results,
+        focusId: active?.source === "google" ? active.id : undefined,
       },
       "…",
     );
@@ -368,12 +363,10 @@ export default function WainApp() {
           <HomeScreen
             photo={photo}
             onPhotoPicked={onPhotoPicked}
-            onIdentify={identifyPhoto}
-            onFindDish={findDish}
-            signText={signText}
-            dishHits={dishHits}
-            onOpenSeed={(p, d) => openPlace(seedToResult(p, d))}
-            busy={!!busy}
+            analyzing={analyzing}
+            outcome={outcome}
+            onOpen={openPlace}
+            onAsk={() => setTab("ask")}
             gpsStatus={gpsStatus}
             lat={lat}
             lng={lng}
