@@ -69,14 +69,14 @@ export default function HomeScreen({
   listening: boolean;
 }) {
   return (
-    <section className="relative flex min-h-full flex-col">
+    <section className="relative flex min-h-full flex-1 flex-col">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url(/hero-terrace.jpg)" }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-[#0B0907]/45 via-[#0B0907]/60 to-[#0B0907]" />
 
-      <div className="relative flex min-h-full flex-col px-5 pb-6 pt-[calc(env(safe-area-inset-top)+16px)]">
+      <div className="relative flex min-h-full flex-1 flex-col px-5 pb-4 pt-[calc(env(safe-area-inset-top)+16px)]">
         <div className="flex items-center justify-between">
           <span className="w-9" />
           <span className="text-xl tracking-[0.25em] text-white">

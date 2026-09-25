@@ -98,6 +98,9 @@ export default function WainApp() {
   const [enrich, setEnrich] = useState<Enrichment | null>(null);
   const [posts, setPosts] = useState<RankedPost[]>([]);
   const [mostOrdered, setMostOrdered] = useState<{ dish: string; count: number } | null>(null);
+  const [findingCreators, setFindingCreators] = useState(false);
+  /** Guards against a slow creator search landing on a place the user left. */
+  const openToken = useRef<string | null>(null);
 
   // Chat
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -198,6 +201,28 @@ export default function WainApp() {
     setSaw(from ?? null);
     setHighlighted(r.id);
     resetPlaceState();
+    openToken.current = r.id;
+
+    // Real creator posts are public but not in any API we hold, so the model
+    // searches the web for them while the rest of the page loads.
+    setFindingCreators(true);
+    fetch("/api/creators", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: r.name_en, address: r.address, city: "Abu Dhabi" }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((d: { posts: RankedPost[] } | null) => {
+        if (openToken.current !== r.id || !d?.posts.length) return;
+        setPosts((prev) => [
+          ...prev,
+          ...d.posts.filter((p) => !prev.some((q) => q.url === p.url)),
+        ]);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (openToken.current === r.id) setFindingCreators(false);
+      });
 
     fetch("/api/enrich", {
       method: "POST",
@@ -222,7 +247,8 @@ export default function WainApp() {
       posts: RankedPost[];
       most_ordered: { dish: string; count: number } | null;
     };
-    setPosts(data.posts);
+    if (openToken.current !== r.id) return;
+    setPosts((prev) => [...data.posts, ...prev]);
     setMostOrdered(data.most_ordered);
   }, []);
 
@@ -273,20 +299,44 @@ export default function WainApp() {
 
   async function ingestReel() {
     const data = await call<{
+      transcript: string;
+      from_web: boolean;
       extraction: Record<string, unknown>;
+      results: SearchResult[];
       match: { place: Place } | null;
-    }>("/api/ingest", { transcript, url: reelUrl }, "Extracting from the reel…");
+    }>(
+      "/api/ingest",
+      { transcript, url: reelUrl, ...origin },
+      transcript.trim() ? "Extracting from the reel…" : "Looking up the reel…",
+    );
     if (!data) return;
     setExtraction(data.extraction);
     const loc = await call<LocalisedText>(
       "/api/localise",
-      { text: transcript, register: "auto" },
+      { text: data.transcript, register: "auto" },
       "Localising…",
     );
     if (loc) setLocalised(loc);
+
     if (data.match) {
       setReelOpen(false);
       openPlace(seedToResult(data.match.place, null));
+      return;
+    }
+    // No seeded match: hand the reel's place guess to Explore as suggestions.
+    if (data.results.length > 0) {
+      setReelOpen(false);
+      setResults(data.results);
+      setHighlighted(data.results[0].id);
+      const guess = data.extraction.place_guess;
+      setNote(typeof guess === "string" && guess ? `From the reel: ${guess}` : null);
+      setTab("explore");
+      return;
+    }
+    if (data.from_web) {
+      setError(
+        "Couldn't tell which place that reel is from — the post isn't indexed. Paste its transcript or a screenshot instead.",
+      );
     }
   }
 
@@ -376,7 +426,7 @@ export default function WainApp() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#0B0907] text-white">
+    <div className="flex h-[100dvh] w-full flex-col bg-[#0B0907] text-white">
       {tab !== "home" && (
         <header className="flex items-center justify-between border-b border-white/8 px-4 py-3">
           <span className="text-lg tracking-[0.2em] text-white">
@@ -477,6 +527,7 @@ export default function WainApp() {
           enrich={enrich}
           posts={posts}
           mostOrdered={mostOrdered}
+          findingCreators={findingCreators}
           saw={saw}
           otherBranches={
             branchResults.some((b) => b.id === active.id)
@@ -509,6 +560,7 @@ export default function WainApp() {
           transcript={transcript}
           setTranscript={setTranscript}
           onIngest={ingestReel}
+          fromWeb={!transcript.trim()}
           extraction={extraction}
           localised={localised}
           busy={!!busy}

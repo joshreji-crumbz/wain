@@ -46,6 +46,16 @@ function variantsOf(place: Place): string[] {
   ].filter(Boolean);
 }
 
+/**
+ * One name containing the other only means they are the same place when the
+ * shorter one covers most of the longer: "Flamingo Room by tashas" happens to
+ * contain "ashas", but it is not Asha's.
+ */
+function contains(a: string, b: string): boolean {
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  return long.includes(short) && short.length / long.length >= 0.6;
+}
+
 export type MatchResult = {
   place: Place;
   score: number;
@@ -68,7 +78,7 @@ export function matchPlace(query: string, candidates: Place[]): MatchResult {
   for (const place of candidates) {
     for (const v of variantsOf(place)) {
       const nv = normaliseName(v);
-      if (nv && (nv === nq || nv.includes(nq) || nq.includes(nv))) {
+      if (nv && (nv === nq || contains(nv, nq))) {
         return { place, score: 0.95, matchedOn: v, method: "normalised" };
       }
     }

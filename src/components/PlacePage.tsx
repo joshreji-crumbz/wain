@@ -18,7 +18,7 @@ import {
   WebsiteIcon,
 } from "./icons";
 import type { ChatMessage, MenuItem, Post, SearchResult } from "@/lib/types";
-import { dishImage, isRtl, metres } from "./ui";
+import { Spinner, dishImage, isRtl, metres } from "./ui";
 
 export type Enrichment = {
   google: {
@@ -82,6 +82,7 @@ export default function PlacePage({
   enrich,
   posts,
   mostOrdered,
+  findingCreators,
   saw,
   onBack,
   onOtherBranches,
@@ -92,6 +93,7 @@ export default function PlacePage({
   enrich: Enrichment | null;
   posts: RankedPost[];
   mostOrdered: { dish: string; count: number } | null;
+  findingCreators: boolean;
   saw: Saw | null;
   onBack: () => void;
   onOtherBranches?: () => void;
@@ -337,14 +339,20 @@ export default function PlacePage({
             )}
           </section>
 
-          {posts.length > 0 && (
+          {(posts.length > 0 || findingCreators) && (
             <section className="mt-5">
               <div className="flex items-baseline justify-between">
                 <h2 className="text-[15px] font-semibold">Seen on social</h2>
-                {mostOrdered && (
-                  <span className="text-xs text-[#A89F94]">
-                    most ordered: {mostOrdered.dish}
+                {findingCreators ? (
+                  <span className="flex items-center gap-1.5 text-xs text-[#A89F94]">
+                    <Spinner /> finding creators…
                   </span>
+                ) : (
+                  mostOrdered && (
+                    <span className="text-xs text-[#A89F94]">
+                      most ordered: {mostOrdered.dish}
+                    </span>
+                  )
                 )}
               </div>
               <ul className="no-scrollbar mt-2 flex gap-3 overflow-x-auto pb-1">
@@ -363,9 +371,9 @@ export default function PlacePage({
                         <span className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white">
                           <PlayIcon className="h-3.5 w-3.5" />
                         </span>
-                        {p.sample && (
+                        {(p.sample || p.web) && (
                           <span className="absolute left-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-[#F2A23A]">
-                            sample
+                            {p.sample ? "sample" : "from the web"}
                           </span>
                         )}
                       </span>

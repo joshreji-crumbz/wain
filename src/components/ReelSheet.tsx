@@ -10,6 +10,7 @@ export default function ReelSheet({
   transcript,
   setTranscript,
   onIngest,
+  fromWeb,
   extraction,
   localised,
   busy,
@@ -20,6 +21,7 @@ export default function ReelSheet({
   transcript: string;
   setTranscript: (v: string) => void;
   onIngest: () => void;
+  fromWeb: boolean;
   extraction: Record<string, unknown> | null;
   localised: LocalisedText | null;
   busy: boolean;
@@ -42,8 +44,8 @@ export default function ReelSheet({
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
         <p className="text-sm text-zinc-400">
-          Paste a reel URL and its transcript. WAIN extracts the place, dish and price, then shows
-          it in your register.
+          Paste a reel link and WAIN looks it up on the web — creator, caption, place and dish —
+          then finds that place near you. Add the transcript if you have it.
         </p>
         <input
           value={url}
@@ -56,15 +58,15 @@ export default function ReelSheet({
           onChange={(e) => setTranscript(e.target.value)}
           rows={5}
           dir={isRtl(transcript) ? "rtl" : "ltr"}
-          placeholder="Reel transcript (English, Khaleeji or Arabizi)…"
+          placeholder="Optional: reel transcript (English, Khaleeji or Arabizi)…"
           className="w-full rounded-lg border border-white/15 bg-transparent px-3 py-2 text-sm"
         />
         <button
           onClick={onIngest}
-          disabled={!transcript.trim() || busy}
+          disabled={(!transcript.trim() && !url.trim()) || busy}
           className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black disabled:opacity-40"
         >
-          Show it in my language
+          {fromWeb ? "Find this place" : "Show it in my language"}
         </button>
 
         {extraction && (
