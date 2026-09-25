@@ -7,6 +7,7 @@ import ChatDock from "./ChatDock";
 import ExploreScreen from "./ExploreScreen";
 import HomeScreen, { type PhotoOutcome } from "./HomeScreen";
 import PlacePage, { type Enrichment, type RankedPost, type Saw } from "./PlacePage";
+import type { BrandProfile } from "@/lib/creators";
 import ReelSheet from "./ReelSheet";
 import { Spinner } from "./ui";
 import type {
@@ -103,6 +104,7 @@ export default function WainApp() {
   const [posts, setPosts] = useState<RankedPost[]>([]);
   const [mostOrdered, setMostOrdered] = useState<{ dish: string; count: number } | null>(null);
   const [findingCreators, setFindingCreators] = useState(false);
+  const [brandProfiles, setBrandProfiles] = useState<BrandProfile[]>([]);
   const [liveMenu, setLiveMenu] = useState<{ items: MenuItem[]; source: string } | null>(
     null,
   );
@@ -236,6 +238,7 @@ export default function WainApp() {
 
   function resetPlaceState() {
     setPosts([]);
+    setBrandProfiles([]);
     setMostOrdered(null);
     setMessages([]);
     setDishes([]);
@@ -256,11 +259,12 @@ export default function WainApp() {
     fetch("/api/creators", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: r.name_en, address: r.address, city: "Abu Dhabi" }),
+      body: JSON.stringify({ name: r.name_en, city: "Abu Dhabi" }),
     })
       .then((res) => (res.ok ? res.json() : null))
-      .then((d: { posts: RankedPost[] } | null) => {
-        if (openToken.current !== r.id || !d?.posts.length) return;
+      .then((d: { posts: RankedPost[]; brand_profiles?: BrandProfile[] } | null) => {
+        if (openToken.current !== r.id || !d) return;
+        setBrandProfiles(d.brand_profiles ?? []);
         setPosts((prev) => [
           ...prev,
           ...d.posts.filter((p) => !prev.some((q) => q.url === p.url)),
@@ -625,6 +629,7 @@ export default function WainApp() {
           posts={posts}
           mostOrdered={mostOrdered}
           findingCreators={findingCreators}
+          brandProfiles={brandProfiles}
           liveMenu={liveMenu}
           findingMenu={findingMenu}
           saw={saw}

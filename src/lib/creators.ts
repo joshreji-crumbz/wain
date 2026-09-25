@@ -1,4 +1,8 @@
 /** Helpers for creator links found by the web-search route. */
+
+/** The brand's own account, offered when no creator posted a reel we can link. */
+export type BrandProfile = { platform: string; handle: string; url: string };
+
 const HOSTS = [
   "instagram.com",
   "tiktok.com",
@@ -30,5 +34,18 @@ export function isSocial(url: string): boolean {
  */
 export function isPermalink(url: string): boolean {
   return /\/(?:video|reel|reels|p|shorts|status)\/|[?&]v=/i.test(url);
+}
+
+/**
+ * Creators post about a chain, not a branch: searching "Tim Hortons - Galleria
+ * Mall, Al Maryah Island" finds nothing, "Tim Hortons" finds everything. Google
+ * prints the branch after a dash, comma or bracket, so cut there.
+ */
+export function brandName(name: string): string {
+  const cut = name
+    .split(/\s[-–—|]\s|[(（]|,/)[0]
+    .replace(/\bbranch\b\s*$/i, "")
+    .trim();
+  return cut.length >= 3 ? cut : name.trim();
 }
 
