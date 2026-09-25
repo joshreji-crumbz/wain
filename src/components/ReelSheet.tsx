@@ -1,8 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import type { LocalisedText } from "@/lib/types";
-import { isRtl } from "./ui";
+import type { LocalisedText, SearchResult } from "@/lib/types";
+import { ChevronIcon } from "./icons";
+import { Spinner, isRtl, metres } from "./ui";
+
+/** Where an order link points, so the button can be named after the app. */
+function platformOf(url: string): string {
+  const h = url.match(/https?:\/\/(?:www\.)?([^/]+)/)?.[1] ?? "";
+  const known = ["talabat", "deliveroo", "noon", "careem", "zomato", "smiles"].find((p) =>
+    h.includes(p),
+  );
+  return known ? known[0].toUpperCase() + known.slice(1) : h;
+}
 
 export default function ReelSheet({
   url,
@@ -12,7 +22,11 @@ export default function ReelSheet({
   onIngest,
   fromWeb,
   hint,
+  step,
   extraction,
+  delivery,
+  results,
+  onOpen,
   localised,
   busy,
   onClose,
@@ -25,12 +39,23 @@ export default function ReelSheet({
   fromWeb: boolean;
   /** Why a link couldn't be read, and what the user can send instead. */
   hint: string | null;
+  /** What the lookup is doing right now, so a 40s wait isn't a dead screen. */
+  step: string | null;
   extraction: Record<string, unknown> | null;
+  /** Talabat/Deliveroo links the research actually printed. */
+  delivery: string[];
+  results: SearchResult[];
+  onOpen: (r: SearchResult) => void;
   localised: LocalisedText | null;
   busy: boolean;
   onClose: () => void;
 }) {
   const [showOriginal, setShowOriginal] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const place = typeof extraction?.place_guess === "string" ? extraction.place_guess : "";
+  const area = typeof extraction?.area === "string" ? extraction.area : "";
+  const dish = typeof extraction?.dish === "string" ? extraction.dish : "";
+  const mapsQuery = [place, area].filter(Boolean).join(" ");
   const body = localised
     ? showOriginal
       ? localised.original
@@ -72,19 +97,85 @@ export default function ReelSheet({
           {fromWeb ? "Find this place" : "Show it in my language"}
         </button>
 
+        {busy && step && (
+          <p className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-zinc-300">
+            <Spinner /> {step}
+          </p>
+        )}
+
+        {place && !busy && (
+          <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+            <p className="text-sm font-semibold">{place}</p>
+            <p className="mt-0.5 text-xs text-zinc-400">
+              {[area, dish].filter(Boolean).join(" · ")}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {mapsQuery && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-white/15 px-3 py-1 text-xs"
+                >
+                  Google Maps
+                </a>
+              )}
+              {delivery.map((d) => (
+                <a
+                  key={d}
+                  href={d}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-[#F2A23A]/40 bg-[#F2A23A]/10 px-3 py-1 text-xs text-[#F2A23A]"
+                >
+                  Order on {platformOf(d)}
+                </a>
+              ))}
+            </div>
+            {results.length > 0 && (
+              <div className="mt-3 space-y-1">
+                {results.slice(0, 4).map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => onOpen(r)}
+                    className="flex w-full items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-left text-xs"
+                  >
+                    <span className="truncate">
+                      {r.name_en}
+                      {r.distance_m !== null && (
+                        <span className="text-zinc-400"> · {metres(r.distance_m)}</span>
+                      )}
+                    </span>
+                    <ChevronIcon className="h-4 w-4 shrink-0 text-zinc-400" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {hint && (
           <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
             {hint}
           </p>
         )}
 
-        {extraction && (
+        {(extraction || localised) && (
+          <button
+            onClick={() => setShowNotes(!showNotes)}
+            className="text-xs text-zinc-400 underline"
+          >
+            {showNotes ? "hide what the web said" : "what the web said"}
+          </button>
+        )}
+
+        {showNotes && extraction && (
           <pre className="overflow-x-auto rounded-xl border border-white/10 bg-black/40 p-3 text-[11px] text-zinc-300">
             {JSON.stringify(extraction, null, 2)}
           </pre>
         )}
 
-        {localised && (
+        {showNotes && localised && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-[11px] uppercase tracking-wide text-zinc-500">

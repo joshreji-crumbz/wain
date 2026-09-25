@@ -86,6 +86,9 @@ export default function WainApp() {
   const [transcript, setTranscript] = useState("");
   const [extraction, setExtraction] = useState<Record<string, unknown> | null>(null);
   const [reelHint, setReelHint] = useState<string | null>(null);
+  const [reelStep, setReelStep] = useState<string | null>(null);
+  const [reelDelivery, setReelDelivery] = useState<string[]>([]);
+  const [reelResults, setReelResults] = useState<SearchResult[]>([]);
   const [localised, setLocalised] = useState<LocalisedText | null>(null);
 
   // Explore
@@ -367,10 +370,23 @@ export default function WainApp() {
   }
 
   async function ingestReel() {
+    // The lookup is one request but three server-side phases, and a 40s wait
+    // with no label reads as a hang.
+    setReelHint(null);
+    setReelDelivery([]);
+    setReelResults([]);
+    const steps = transcript.trim()
+      ? ["Reading the transcript…", "Finding the place near you…"]
+      : ["Reading the post…", "Searching the web for the place…", "Finding it near you…"];
+    setReelStep(steps[0]);
+    const timers = steps
+      .slice(1)
+      .map((s, i) => setTimeout(() => setReelStep(s), (i + 1) * 12000));
     const data = await call<{
       transcript: string;
       from_web: boolean;
       hint: string | null;
+      delivery: string[];
       extraction: Record<string, unknown>;
       results: SearchResult[];
       match: { place: Place } | null;
@@ -379,29 +395,33 @@ export default function WainApp() {
       { transcript, url: reelUrl, ...origin },
       transcript.trim() ? "Extracting from the reel…" : "Looking up the reel…",
     );
+    timers.forEach(clearTimeout);
+    setReelStep(data ? "Translating what they said…" : null);
     if (!data) return;
     setExtraction(data.extraction);
     setReelHint(data.hint);
+    setReelDelivery(data.delivery ?? []);
+    setReelResults(data.results);
     const loc = await call<LocalisedText>(
       "/api/localise",
       { text: data.transcript, register: "auto" },
       "Localising…",
     );
     if (loc) setLocalised(loc);
+    setReelStep(null);
 
     if (data.match) {
       setReelOpen(false);
       openPlace(seedToResult(data.match.place, null));
       return;
     }
-    // No seeded match: hand the reel's place guess to Explore as suggestions.
+    // Google found the venue: keep the sheet open so the user can read what the
+    // reel was about and pick the branch, rather than being thrown into Explore.
     if (data.results.length > 0) {
-      setReelOpen(false);
       setResults(data.results);
       setHighlighted(data.results[0].id);
       const guess = data.extraction.place_guess;
       setNote(typeof guess === "string" && guess ? `From the reel: ${guess}` : null);
-      setTab("explore");
       return;
     }
     if (data.from_web && !data.hint) {
@@ -641,7 +661,14 @@ export default function WainApp() {
           onIngest={ingestReel}
           fromWeb={!transcript.trim()}
           hint={reelHint}
+          step={reelStep}
           extraction={extraction}
+          delivery={reelDelivery}
+          results={reelResults}
+          onOpen={(r) => {
+            setReelOpen(false);
+            openPlace(r);
+          }}
           localised={localised}
           busy={!!busy}
           onClose={() => setReelOpen(false)}

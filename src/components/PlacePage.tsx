@@ -48,6 +48,15 @@ export type Saw = {
   item: { name_en: string; price_aed: number } | null;
 };
 
+/** Names an order button after the app it opens. */
+function orderName(url: string): string {
+  const host = url.match(/https?:\/\/(?:www\.)?([^/]+)/)?.[1] ?? "";
+  const app = ["talabat", "deliveroo", "noon", "careem", "zomato", "smiles"].find((p) =>
+    host.includes(p),
+  );
+  return app ? app[0].toUpperCase() + app.slice(1) : host;
+}
+
 function Action({
   href,
   icon,
@@ -135,6 +144,10 @@ export default function PlacePage({
     result.seed?.links.maps ||
     `https://www.google.com/maps/search/?api=1&query=${result.lat},${result.lng}`;
   const menuLink = enrich?.socials?.menu_links[0] || result.seed?.links.website || "";
+  // Delivery pages are the one link people actually want after the map.
+  const order = (enrich?.socials?.menu_links ?? []).filter((l) =>
+    /talabat|deliveroo|noon|careem|zomato|smiles/i.test(l),
+  );
   const instagram = enrich?.socials?.instagram || result.seed?.links.instagram || "";
   const website = g?.website || result.seed?.links.website || "";
   const phone = g?.phone ? `tel:${g.phone.replace(/\s/g, "")}` : "";
@@ -252,6 +265,22 @@ export default function PlacePage({
               label={website ? "Website" : "Call"}
             />
           </div>
+
+          {order.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {order.map((l) => (
+                <a
+                  key={l}
+                  href={l}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-[#F2A23A]/40 bg-[#F2A23A]/10 px-3 py-1 text-xs text-[#F2A23A]"
+                >
+                  Order on {orderName(l)}
+                </a>
+              ))}
+            </div>
+          )}
 
           {otherBranches ? (
             <button

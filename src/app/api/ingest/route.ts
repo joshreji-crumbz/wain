@@ -2,7 +2,7 @@ import { normaliseQuery } from "@/lib/brands";
 import { places } from "@/lib/data";
 import { searchText } from "@/lib/google";
 import { askJson, askTextWithSearch } from "@/lib/llm";
-import { matchPlace, sameName } from "@/lib/normalise";
+import { matchPlace, normaliseName, sameName } from "@/lib/normalise";
 import { fetchReelMeta, handleFromUrl } from "@/lib/reel";
 import { googleRow, seedRow } from "@/lib/results";
 import type { SearchResult } from "@/lib/types";
@@ -29,6 +29,47 @@ const SCHEMA = {
 };
 
 const RADIUS_M = 5000;
+
+const DELIVERY = /https?:\/\/[^\s)\]"'<>]*\b(?:talabat|deliveroo|noon|careem|zomato|smiles)\b[^\s)\]"'<>]*/gi;
+
+/** Order links only count when the research actually printed them. */
+function deliveryLinks(text: string): string[] {
+  return [...new Set((text.match(DELIVERY) ?? []).map((u) => u.replace(/[.,]+$/, "")))].slice(
+    0,
+    4,
+  );
+}
+
+const STOP = new Set([
+  "cafe",
+  "caf",
+  "restaurant",
+  "the",
+  "and",
+  "bar",
+  "kitchen",
+  "house",
+  "food",
+  "uae",
+  "dubai",
+  "abu",
+  "dhabi",
+  "sharjah",
+]);
+
+/**
+ * Google Text Search always answers, so "Culture Café" in Sharjah comes back as
+ * every cafe near the user. Only rows that carry a distinctive word of the
+ * reel's venue name are that venue.
+ */
+function namedLike(guess: string, name: string): boolean {
+  if (sameName(guess, name)) return true;
+  const words = normaliseName(guess)
+    .split(" ")
+    .filter((w) => w.length >= 4 && !STOP.has(w));
+  const target = ` ${normaliseName(name)} `;
+  return words.length > 0 && words.some((w) => target.includes(` ${w}`));
+}
 
 /**
  * Reads the post's own caption and creator first, then searches the web to turn
@@ -97,6 +138,7 @@ Pull the restaurant name as spoken (any spelling), the main dish, the price in A
           .filter(
             (g) => !seeded.some((s) => sameName(s.name_en, g.name_en)),
           )
+          .filter((g) => !extraction.place_guess || namedLike(extraction.place_guess, g.name_en))
           .sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0)),
       ];
     } catch {
@@ -119,6 +161,7 @@ Pull the restaurant name as spoken (any spelling), the main dish, the price in A
     from_web: looked !== null,
     post_read: looked === null ? null : looked.read,
     hint,
+    delivery: deliveryLinks(text),
     extraction,
     results,
     match: match
