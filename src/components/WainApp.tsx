@@ -544,6 +544,12 @@ export default function WainApp() {
     setListening(true);
   }
 
+  /** The answer lands in chat, so the mic on Home records from the Ask tab. */
+  function micFromHome() {
+    if (!listening) setTab("ask");
+    toggleMic();
+  }
+
   function askFromHome(text?: string) {
     setTab("ask");
     const q = text ?? input;
@@ -596,7 +602,7 @@ export default function WainApp() {
             onAsk={askFromHome}
             input={input}
             setInput={setInput}
-            onMic={toggleMic}
+            onMic={micFromHome}
             listening={listening}
             gpsStatus={gpsStatus}
             lat={lat}
