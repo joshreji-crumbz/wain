@@ -45,7 +45,7 @@ export default function ChatDock({
             <div
               key={i}
               dir={isRtl(m.content) ? "rtl" : "ltr"}
-              className={`max-w-[85%] px-4 py-2.5 text-sm ${
+              className={`w-fit max-w-[85%] px-4 py-2.5 text-sm ${
                 m.role === "user"
                   ? "ml-auto rounded-3xl rounded-br-md bg-[#F2A23A] text-black"
                   : "glass rounded-3xl rounded-bl-md text-white"

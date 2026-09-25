@@ -451,7 +451,7 @@ export default function WainApp() {
                 ? `Answering about ${active.name_en}.`
                 : `Answering from ${results.length} places near you — open one for its menu.`}
             </p>
-            <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto">
               <ChatDock
                 messages={messages}
                 dishes={dishes}

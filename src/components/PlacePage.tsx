@@ -189,7 +189,7 @@ export default function PlacePage({
           )}
         </div>
 
-        <div className="-mt-6 px-4">
+        <div className="relative z-10 -mt-6 px-4">
           <h1 className="flex items-center gap-2 text-[26px] font-bold leading-tight">
             {result.name_en}
             {result.source === "wain" && (
@@ -197,7 +197,7 @@ export default function PlacePage({
             )}
           </h1>
           {result.name_ar && (
-            <p dir="rtl" className="text-lg text-[#A89F94]">
+            <p dir="rtl" className="text-left text-lg text-[#A89F94]">
               {result.name_ar}
             </p>
           )}
