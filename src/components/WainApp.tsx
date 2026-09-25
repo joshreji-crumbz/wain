@@ -12,6 +12,17 @@ type Act = "photo" | "reel" | "posts" | "chat";
 
 type RankedPost = Post & { summary: string };
 
+type DishSearch = {
+  dish: { dish_en: string; dish_ar: string };
+  radius_m: number;
+  places: {
+    place: Place;
+    distance_m: number;
+    reason: string;
+    matched_items: { name_en: string; name_ar: string; price_aed: number }[];
+  }[];
+};
+
 function isRtl(text: string) {
   return /[\u0600-\u06FF]/.test(text);
 }
@@ -38,6 +49,7 @@ export default function WainApp() {
   const [lat, setLat] = useState("24.5005");
   const [lng, setLng] = useState("54.3870");
   const [signText, setSignText] = useState<{ ar: string; en: string } | null>(null);
+  const [dishHits, setDishHits] = useState<DishSearch | null>(null);
   const [showManualGps, setShowManualGps] = useState(false);
   const manualGps = useRef(false);
   const [gpsStatus, setGpsStatus] = useState("default location (Al Maryah)");
@@ -68,7 +80,7 @@ export default function WainApp() {
   const [dishes, setDishes] = useState<MenuItem[]>([]);
   const [listening, setListening] = useState(false);
   const chatEnd = useRef<HTMLDivElement>(null);
-  const recognition = useRef<SpeechRecognitionLike | null>(null);
+  const recorder = useRef<MediaRecorder | null>(null);
 
   useEffect(() => {
     fetch("/api/places")
@@ -130,12 +142,32 @@ export default function WainApp() {
       match: { place: Place; distance_m: number; confidence: number } | null;
     }>("/api/photo", { image: photo, lat: Number(lat), lng: Number(lng) }, "Reading the sign…");
     if (!data) return;
+    setDishHits(null);
     setSignText({ ar: data.sign.sign_text_ar, en: data.sign.sign_text_en });
     if (data.match) {
       setActive(data.match.place);
       setDistance(data.match.distance_m);
     } else {
       setError("No place within 500 m matched that sign.");
+    }
+  }
+
+  async function findDish() {
+    if (!photo) return;
+    const data = await call<DishSearch>(
+      "/api/dish",
+      { image: photo, lat: Number(lat), lng: Number(lng) },
+      "Identifying the dish…",
+    );
+    if (!data) return;
+    setSignText(null);
+    setDishHits(data);
+    if (!data.places.length) {
+      setError(
+        data.dish.dish_en
+          ? `No place within 5 km serves ${data.dish.dish_en} in our data.`
+          : "That photo doesn't look like food.",
+      );
     }
   }
 
@@ -222,31 +254,48 @@ export default function WainApp() {
     });
   }
 
-  function toggleMic() {
-    const Ctor =
-      (window as WindowWithSpeech).SpeechRecognition ??
-      (window as WindowWithSpeech).webkitSpeechRecognition;
-    if (!Ctor) {
-      setError("This browser has no built-in speech recognition. Type instead.");
-      return;
-    }
+  async function toggleMic() {
     if (listening) {
-      recognition.current?.stop();
+      recorder.current?.stop();
       setListening(false);
       return;
     }
-    const rec = new Ctor();
-    const spoken = register === "auto" ? detected : register;
-    rec.lang = spoken === "english" ? "en-AE" : "ar-AE";
-    rec.interimResults = false;
-    rec.onresult = (event) => {
-      const said = event.results[0][0].transcript;
-      setListening(false);
-      send(said);
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setError("This browser can't record audio. Type instead.");
+      return;
+    }
+
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setError("Microphone permission denied.");
+      return;
+    }
+
+    const mime = ["audio/mp4", "audio/webm"].find((t) => MediaRecorder.isTypeSupported(t));
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    const chunks: Blob[] = [];
+    rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    rec.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      const blob = new Blob(chunks, { type: rec.mimeType });
+      if (blob.size < 1000) return;
+      const body = new FormData();
+      body.append("audio", blob, `speech.${rec.mimeType.includes("mp4") ? "mp4" : "webm"}`);
+      setBusy("transcribing…");
+      try {
+        const res = await fetch("/api/transcribe", { method: "POST", body });
+        const data = await res.json();
+        setBusy(null);
+        if (data.text) send(data.text);
+        else setError(data.error ?? "Could not transcribe that.");
+      } catch {
+        setBusy(null);
+        setError("Could not transcribe that.");
+      }
     };
-    rec.onerror = () => setListening(false);
-    rec.onend = () => setListening(false);
-    recognition.current = rec;
+    recorder.current = rec;
     rec.start();
     setListening(true);
   }
@@ -370,13 +419,22 @@ export default function WainApp() {
                   </div>
                 )}
                 {photo && (
-                  <button
-                    onClick={identifyPhoto}
-                    disabled={!!busy}
-                    className="w-full rounded-xl bg-zinc-900 px-3 py-3 text-sm font-medium text-white disabled:opacity-40"
-                  >
-                    Identify this place
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={identifyPhoto}
+                      disabled={!!busy}
+                      className="flex-1 rounded-xl bg-zinc-900 px-3 py-3 text-sm font-medium text-white disabled:opacity-40"
+                    >
+                      It's a storefront
+                    </button>
+                    <button
+                      onClick={findDish}
+                      disabled={!!busy}
+                      className="flex-1 rounded-xl border border-zinc-900 px-3 py-3 text-sm font-medium text-zinc-900 disabled:opacity-40"
+                    >
+                      It's a dish
+                    </button>
+                  </div>
                 )}
                 {photo && (
                   <Image
@@ -392,6 +450,33 @@ export default function WainApp() {
                   <div className="rounded-xl bg-zinc-100 p-3 text-xs text-zinc-700">
                     <div>sign (en): {signText.en || "—"}</div>
                     <div dir="rtl">sign (ar): {signText.ar || "—"}</div>
+                  </div>
+                )}
+                {dishHits && dishHits.places.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-xs text-zinc-500">
+                      {dishHits.dish.dish_en} · {dishHits.dish.dish_ar} — within{" "}
+                      {dishHits.radius_m / 1000} km
+                    </div>
+                    {dishHits.places.map((h) => (
+                      <button
+                        key={h.place.id}
+                        onClick={() => selectPlace(h.place, h.distance_m)}
+                        className="w-full rounded-xl border border-zinc-200 p-3 text-left text-xs hover:border-teal-600"
+                      >
+                        <div className="flex justify-between font-medium text-zinc-800">
+                          <span>{h.place.names.en}</span>
+                          <span className="text-zinc-400">{h.distance_m} m</span>
+                        </div>
+                        <div className="text-zinc-500">
+                          {h.matched_items.length
+                            ? h.matched_items
+                                .map((m) => `${m.name_en} · AED ${m.price_aed}`)
+                                .join(" · ")
+                            : `${h.place.cuisine.join(", ")} — matched on cuisine`}
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 )}
               </section>
@@ -597,12 +682,12 @@ export default function WainApp() {
                     type="button"
                     onClick={toggleMic}
                     disabled={!active || !!busy}
-                    title="Ask by voice (ar-AE)"
+                    title="Ask by voice — tap to record, tap again to send"
                     className={`rounded-lg px-3 py-2 text-sm ${
                       listening ? "bg-rose-600 text-white" : "border border-zinc-300 text-zinc-600"
                     } disabled:opacity-40`}
                   >
-                    {listening ? "● rec" : "🎙"}
+                    {listening ? "● stop" : "🎙"}
                   </button>
                   <button
                     type="submit"

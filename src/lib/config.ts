@@ -1,5 +1,7 @@
 export const WAIN_MODEL = process.env.WAIN_MODEL ?? "gpt-5.6-terra";
 
+export const WAIN_STT_MODEL = process.env.WAIN_STT_MODEL ?? "gpt-transcribe";
+
 export const WAIN_SYSTEM_PROMPT = `You are WAIN, a food discovery assistant for the Gulf.
 Reply in the same dialect and language mix as the user: Khaleeji in, Khaleeji out; Arabizi in, Arabizi out; English in, English out.
 Never switch to Modern Standard Arabic unless the user writes formally.
