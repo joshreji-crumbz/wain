@@ -2,7 +2,7 @@ import { normaliseQuery } from "@/lib/brands";
 import { places } from "@/lib/data";
 import { searchText } from "@/lib/google";
 import { askJson, askTextWithSearch } from "@/lib/llm";
-import { matchPlace, normaliseName } from "@/lib/normalise";
+import { matchPlace, sameName } from "@/lib/normalise";
 import { fetchReelMeta } from "@/lib/reel";
 import { googleRow, seedRow } from "@/lib/results";
 import type { SearchResult } from "@/lib/types";
@@ -91,7 +91,7 @@ Pull the restaurant name as spoken (any spelling), the main dish, the price in A
           .filter((g): g is SearchResult => !!g)
           .filter((g) => (g.distance_m ?? 0) <= RADIUS_M)
           .filter(
-            (g) => !seeded.some((s) => normaliseName(s.name_en) === normaliseName(g.name_en)),
+            (g) => !seeded.some((s) => sameName(s.name_en, g.name_en)),
           )
           .sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0)),
       ];

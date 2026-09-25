@@ -61,11 +61,16 @@ export async function placeDetails(placeId: string): Promise<GooglePlace> {
   return res.json();
 }
 
+/**
+ * "burger" ranked by relevance returns the most famous burger place in the
+ * emirate, not the one across the mall, so dish searches ask for DISTANCE.
+ */
 export async function searchText(
   query: string,
   origin: { lat: number; lng: number },
   radiusM = 2000,
   maxResultCount = 5,
+  rank: "RELEVANCE" | "DISTANCE" = "RELEVANCE",
 ): Promise<GooglePlace[]> {
   const res = await fetch(`${PLACES}/places:searchText`, {
     method: "POST",
@@ -78,6 +83,7 @@ export async function searchText(
       textQuery: query,
       languageCode: "en",
       maxResultCount,
+      rankPreference: rank,
       locationBias: {
         circle: { center: { latitude: origin.lat, longitude: origin.lng }, radius: radiusM },
       },

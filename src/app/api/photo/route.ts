@@ -3,7 +3,7 @@ import { distanceMeters, places, placesWithin } from "@/lib/data";
 import { matchDish, type DishRead } from "@/lib/dishmatch";
 import { searchText } from "@/lib/google";
 import { askJson, imagePart, textPart } from "@/lib/llm";
-import { matchPlace, normaliseName } from "@/lib/normalise";
+import { matchPlace, normaliseName, sameName } from "@/lib/normalise";
 import { googleRow, seedRow, type Origin } from "@/lib/results";
 import type { SearchResult } from "@/lib/types";
 
@@ -114,16 +114,20 @@ export async function POST(request: Request) {
   };
 
   let googleError: string | null = null;
-  async function google(query: string, seeded: SearchResult[]): Promise<SearchResult[]> {
+  async function google(
+    query: string,
+    seeded: SearchResult[],
+    rank: "RELEVANCE" | "DISTANCE" = "RELEVANCE",
+  ): Promise<SearchResult[]> {
     if (!process.env.GOOGLE_MAPS_API_KEY) return [];
     try {
-      const found = await searchText(query, origin, BRANCH_RADIUS_M, 10);
+      const found = await searchText(query, origin, BRANCH_RADIUS_M, 10, rank);
       return found
         .map((g) => googleRow(g, origin))
         .filter((g): g is SearchResult => !!g)
         .filter((g) => (g.distance_m ?? 0) <= BRANCH_RADIUS_M)
         .filter(
-          (g) => !seeded.some((s) => normaliseName(s.name_en) === normaliseName(g.name_en)),
+          (g) => !seeded.some((s) => sameName(s.name_en, g.name_en)),
         )
         .sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0));
     } catch (e) {
@@ -172,10 +176,21 @@ export async function POST(request: Request) {
     };
     const hits = matchDish(dish, origin, BRANCH_RADIUS_M).slice(0, 8);
     const seeded = hits.map((h) => seedRow(h.place, origin));
-    const results = [
-      ...seeded,
-      ...(await google(`${read.dish_en} restaurant`, seeded)),
-    ].slice(0, 12);
+    const onMenu = new Set(
+      hits.filter((h) => h.reason === "menu item").map((h) => h.place.id),
+    );
+    const found = await google(read.dish_en, seeded, "DISTANCE");
+    // A cuisine-only seeded hit is a guess that the kitchen might serve this;
+    // once Google names places that actually do, it is noise.
+    const kept = found.length ? seeded.filter((s) => onMenu.has(s.id)) : seeded;
+    // Whoever lists the dish leads; after that the only thing that matters is
+    // how far the user has to walk.
+    const results = [...kept, ...found]
+      .sort((a, b) => {
+        const menu = Number(onMenu.has(b.id)) - Number(onMenu.has(a.id));
+        return menu !== 0 ? menu : (a.distance_m ?? 0) - (b.distance_m ?? 0);
+      })
+      .slice(0, 12);
 
     return Response.json({
       tier: "dish",

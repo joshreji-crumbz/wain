@@ -56,6 +56,17 @@ function contains(a: string, b: string): boolean {
   return long.includes(short) && short.length / long.length >= 0.6;
 }
 
+/**
+ * Google prints a branch suffix ("Grand Beirut restaurant The Galleria Mall")
+ * where the seed carries the bare name, so exact equality double-lists a place.
+ */
+export function sameName(a: string, b: string): boolean {
+  const [na, nb] = [normaliseName(a), normaliseName(b)];
+  if (!na || !nb) return false;
+  const [short, long] = na.length <= nb.length ? [na, nb] : [nb, na];
+  return na === nb || (short.length >= 6 && long.startsWith(short));
+}
+
 export type MatchResult = {
   place: Place;
   score: number;

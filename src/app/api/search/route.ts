@@ -1,7 +1,7 @@
 import { normaliseQuery } from "@/lib/brands";
 import { places } from "@/lib/data";
 import { searchText } from "@/lib/google";
-import { matchPlace, normaliseName } from "@/lib/normalise";
+import { matchPlace, normaliseName, sameName } from "@/lib/normalise";
 import { googleRow, seedRow } from "@/lib/results";
 import type { Place, SearchResult } from "@/lib/types";
 
@@ -64,9 +64,7 @@ export async function POST(request: Request) {
         .filter((g) => (g.distance_m ?? 0) <= RADIUS_M)
         .filter(
           (g) =>
-            !seeded.some(
-              (s) => normaliseName(s.name_en) === normaliseName(g.name_en),
-            ),
+            !seeded.some((s) => sameName(s.name_en, g.name_en)),
         )
         .sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0));
     } catch (e) {
