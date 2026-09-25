@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Analyzing from "./Analyzing";
 import BottomNav, { type Tab } from "./BottomNav";
 import ChatDock from "./ChatDock";
 import ExploreScreen from "./ExploreScreen";
-import HomeScreen, { type DishSearch } from "./HomeScreen";
-import PlacePage, { type Enrichment, type RankedPost } from "./PlacePage";
+import HomeScreen, { type PhotoOutcome } from "./HomeScreen";
+import PlacePage, { type Enrichment, type RankedPost, type Saw } from "./PlacePage";
 import ReelSheet from "./ReelSheet";
 import { Spinner } from "./ui";
 import type {
@@ -37,6 +38,21 @@ function seedToResult(place: Place, distanceM: number | null): SearchResult {
   };
 }
 
+/** "You saw" only claims a dish price when the photo route matched real menu data. */
+function sawFor(
+  outcome: PhotoOutcome | null,
+  result: SearchResult,
+  photo: string | null,
+): Saw | null {
+  if (!photo || !outcome || outcome.tier === "unclear") return null;
+  const item = outcome.matches?.find((m) => m.place_id === result.id)?.matched_items[0];
+  return {
+    photo,
+    dish: outcome.dish?.dish_en ?? outcome.brand,
+    item: item ? { name_en: item.name_en, price_aed: item.price_aed } : null,
+  };
+}
+
 export default function WainApp() {
   const [tab, setTab] = useState<Tab>("home");
   const [busy, setBusy] = useState<string | null>(null);
@@ -58,8 +74,11 @@ export default function WainApp() {
 
   // Home — camera
   const [photo, setPhoto] = useState<string | null>(null);
-  const [signText, setSignText] = useState<{ ar: string; en: string } | null>(null);
-  const [dishHits, setDishHits] = useState<DishSearch | null>(null);
+  const [outcome, setOutcome] = useState<PhotoOutcome | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [saw, setSaw] = useState<Saw | null>(null);
+  /** Branches of the brand just photographed, for the "other branches" link. */
+  const [branchResults, setBranchResults] = useState<SearchResult[]>([]);
 
   // Reel
   const [reelOpen, setReelOpen] = useState(false);
@@ -174,8 +193,9 @@ export default function WainApp() {
     setEnrich(null);
   }
 
-  const openPlace = useCallback(async (r: SearchResult) => {
+  const openPlace = useCallback(async (r: SearchResult, from?: Saw | null) => {
     setActive(r);
+    setSaw(from ?? null);
     setHighlighted(r.id);
     resetPlaceState();
 
@@ -206,42 +226,49 @@ export default function WainApp() {
     setMostOrdered(data.most_ordered);
   }, []);
 
+  // The photo route decides brand vs dish vs unclear itself, so the capture
+  // runs straight into analysis with no "is this a storefront?" question.
+  async function analysePhoto(image: string) {
+    setOutcome(null);
+    setAnalyzing(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image, ...origin }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "request failed");
+      const result = data as PhotoOutcome;
+      setOutcome(result);
+      setResults(result.results);
+      setBranchResults(result.tier === "brand" ? result.results : []);
+      // Let the last step's check fill before the screen hands over.
+      await new Promise((r) => setTimeout(r, 900));
+      setAnalyzing(false);
+      // A brand lands straight on its nearest branch; a bare dish has no single
+      // answer, so the ranked list in Explore is the answer.
+      if (result.tier === "brand" && result.results[0]) {
+        openPlace(result.results[0], sawFor(result, result.results[0], image));
+      } else if (result.tier === "dish" && result.results.length > 0) {
+        setNote(result.evidence);
+        setTab("explore");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setAnalyzing(false);
+    }
+  }
+
   function onPhotoPicked(file: File) {
     const reader = new FileReader();
-    reader.onload = () => setPhoto(reader.result as string);
+    reader.onload = () => {
+      const image = reader.result as string;
+      setPhoto(image);
+      analysePhoto(image);
+    };
     reader.readAsDataURL(file);
-  }
-
-  async function identifyPhoto() {
-    if (!photo) return;
-    const data = await call<{
-      sign: { sign_text_ar: string; sign_text_en: string };
-      match: { place: Place; distance_m: number; confidence: number } | null;
-    }>("/api/photo", { image: photo, ...origin }, "Reading the sign…");
-    if (!data) return;
-    setDishHits(null);
-    setSignText({ ar: data.sign.sign_text_ar, en: data.sign.sign_text_en });
-    if (data.match) openPlace(seedToResult(data.match.place, data.match.distance_m));
-    else setError("No place within 500 m matched that sign.");
-  }
-
-  async function findDish() {
-    if (!photo) return;
-    const data = await call<DishSearch>(
-      "/api/dish",
-      { image: photo, ...origin },
-      "Identifying the dish…",
-    );
-    if (!data) return;
-    setSignText(null);
-    setDishHits(data);
-    if (!data.places.length) {
-      setError(
-        data.dish.dish_en
-          ? `No place within 5 km serves ${data.dish.dish_en} in our data.`
-          : "That photo doesn't look like food.",
-      );
-    }
   }
 
   async function ingestReel() {
@@ -275,6 +302,7 @@ export default function WainApp() {
         placeId: active?.source === "wain" ? active.id : undefined,
         history: messages,
         nearby: active?.source === "wain" ? undefined : active ? [active, ...results] : results,
+        focusId: active?.source === "google" ? active.id : undefined,
       },
       "…",
     );
@@ -330,6 +358,12 @@ export default function WainApp() {
     setListening(true);
   }
 
+  function askFromHome(text?: string) {
+    setTab("ask");
+    const q = text ?? input;
+    if (q.trim()) send(q);
+  }
+
   const chat = {
     messages,
     dishes,
@@ -342,18 +376,20 @@ export default function WainApp() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#100d0b] text-zinc-100">
-      <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-        <span className="text-xl font-bold tracking-[0.2em] text-zinc-50">
-          WAIN <span className="font-normal tracking-normal text-amber-400">وين</span>
-        </span>
-        <span className="text-[11px] text-zinc-500">{detected}</span>
-      </header>
+    <div className="flex min-h-screen w-full flex-col bg-[#0B0907] text-white">
+      {tab !== "home" && (
+        <header className="flex items-center justify-between border-b border-white/8 px-4 py-3">
+          <span className="text-lg tracking-[0.2em] text-white">
+            WAIN <span className="font-arabic tracking-normal text-[#F2A23A]">وين</span>
+          </span>
+          <span className="text-[11px] text-[#A89F94]">{detected}</span>
+        </header>
+      )}
 
       {(busy || error) && (
         <div className="space-y-1 px-4 py-2">
           {busy && (
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-300">
+            <div className="glass flex items-center gap-2 px-3 py-2 text-xs text-white/85">
               <Spinner /> {busy}
             </div>
           )}
@@ -366,14 +402,14 @@ export default function WainApp() {
       <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         {tab === "home" && (
           <HomeScreen
-            photo={photo}
             onPhotoPicked={onPhotoPicked}
-            onIdentify={identifyPhoto}
-            onFindDish={findDish}
-            signText={signText}
-            dishHits={dishHits}
-            onOpenSeed={(p, d) => openPlace(seedToResult(p, d))}
-            busy={!!busy}
+            outcome={outcome}
+            onOpen={(r) => openPlace(r, sawFor(outcome, r, photo))}
+            onAsk={askFromHome}
+            input={input}
+            setInput={setInput}
+            onMic={toggleMic}
+            listening={listening}
             gpsStatus={gpsStatus}
             lat={lat}
             lng={lng}
@@ -410,12 +446,12 @@ export default function WainApp() {
 
         {tab === "ask" && (
           <section className="flex min-h-0 flex-1 flex-col px-4">
-            <p className="py-3 text-xs text-zinc-500">
+            <p className="py-3 text-xs text-[#A89F94]">
               {active
                 ? `Answering about ${active.name_en}.`
                 : `Answering from ${results.length} places near you — open one for its menu.`}
             </p>
-            <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto">
               <ChatDock
                 messages={messages}
                 dishes={dishes}
@@ -441,8 +477,28 @@ export default function WainApp() {
           enrich={enrich}
           posts={posts}
           mostOrdered={mostOrdered}
+          saw={saw}
+          otherBranches={
+            branchResults.some((b) => b.id === active.id)
+              ? branchResults.length - 1
+              : 0
+          }
+          onOtherBranches={() => {
+            setResults(branchResults);
+            setActive(null);
+            setTab("explore");
+          }}
           onBack={() => setActive(null)}
           chat={chat}
+        />
+      )}
+
+      {analyzing && (
+        <Analyzing
+          photo={photo}
+          done={!!outcome}
+          evidence={outcome?.evidence ?? null}
+          onBack={() => setAnalyzing(false)}
         />
       )}
 

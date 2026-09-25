@@ -11,9 +11,9 @@ export type MapMarker = {
 };
 
 const DARK_STYLE: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#1b1713" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#9a8f82" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#100d0b" }] },
+  { elementType: "geometry", stylers: [{ color: "#17130f" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#A89F94" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0B0907" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "road", elementType: "geometry", stylers: [{ color: "#2a241e" }] },
   { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#7c7166" }] },
@@ -111,9 +111,9 @@ export default function GoogleMapView({
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: active ? 10 : 7,
-          fillColor: active ? "#f59e0b" : m.seeded ? "#d97706" : "#a1a1aa",
+          fillColor: active ? "#F2A23A" : m.seeded ? "#c07c22" : "#A89F94",
           fillOpacity: 1,
-          strokeColor: "#100d0b",
+          strokeColor: "#0B0907",
           strokeWeight: 2,
         },
       });
@@ -133,7 +133,7 @@ export default function GoogleMapView({
         />
       )}
       {(error || !apiKey) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#15110e] px-6 text-center text-xs text-zinc-500">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#15110e] px-6 text-center text-xs text-[#A89F94]">
           {error ?? "NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY is not set"}
         </div>
       )}

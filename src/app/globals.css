@@ -1,19 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  --background: #100d0b;
-  --foreground: #ededed;
+  --background: #0b0907;
+  --foreground: #f4efe8;
+  --muted: #a89f94;
+  --amber: #f2a23a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-amber: var(--amber);
+  --font-sans: var(--font-inter);
+  --font-arabic: var(--font-plex-arabic);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), var(--font-plex-arabic), system-ui, sans-serif;
+}
+
+:lang(ar),
+[dir="rtl"] {
+  font-family: var(--font-plex-arabic), var(--font-inter), sans-serif;
+}
+
+@utility glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

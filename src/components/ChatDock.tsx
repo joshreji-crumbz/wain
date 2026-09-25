@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef } from "react";
+import { MicIcon, WaveIcon } from "./icons";
 import type { ChatMessage, MenuItem } from "@/lib/types";
-import { isRtl } from "./ui";
+import { dishImage, isRtl } from "./ui";
 
 export default function ChatDock({
   messages,
@@ -36,17 +38,17 @@ export default function ChatDock({
   }, [messages]);
 
   return (
-    <div className={pinned ? "sticky bottom-0 bg-[#100d0b]/95 backdrop-blur" : ""}>
+    <div className={pinned ? "sticky bottom-0" : ""}>
       {!pinned && (
         <div className="space-y-2 pb-3">
           {messages.map((m, i) => (
             <div
               key={i}
               dir={isRtl(m.content) ? "rtl" : "ltr"}
-              className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+              className={`w-fit max-w-[85%] px-4 py-2.5 text-sm ${
                 m.role === "user"
-                  ? "ml-auto bg-amber-500 text-black"
-                  : "bg-white/10 text-zinc-100"
+                  ? "ml-auto rounded-3xl rounded-br-md bg-[#F2A23A] text-black"
+                  : "glass rounded-3xl rounded-bl-md text-white"
               }`}
             >
               {m.content}
@@ -57,30 +59,41 @@ export default function ChatDock({
       )}
 
       {dishes.length > 0 && (
-        <ul className="space-y-1 pb-2">
-          {dishes.map((d) => (
-            <li
-              key={d.name_en}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm"
-            >
-              <span>
-                {d.name_en} <span dir="rtl">· {d.name_ar}</span>
-              </span>
-              <span className="font-semibold text-amber-400">{d.price_aed} AED</span>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="no-scrollbar flex gap-3 overflow-x-auto pb-2">
+            {dishes.map((d) => (
+              <li key={d.name_en} className="w-32 shrink-0">
+                <Image
+                  src={dishImage(`${d.name_en} ${d.name_ar}`)}
+                  alt={d.name_en}
+                  width={160}
+                  height={120}
+                  className="h-24 w-32 rounded-2xl object-cover"
+                />
+                <p className="mt-1.5 truncate text-[13px] font-medium text-white">
+                  {d.name_en}
+                </p>
+                <p className="text-[12px] text-[#A89F94]">AED {d.price_aed}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="pb-2">
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-[#A89F94]">
+              source: menu
+            </span>
+          </p>
+        </>
       )}
 
       {prompts.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pb-2">
+        <div className="no-scrollbar flex gap-2 overflow-x-auto pb-2">
           {prompts.map((q) => (
             <button
               key={q}
               onClick={() => onSend(q)}
               disabled={busy}
               dir={isRtl(q) ? "rtl" : "ltr"}
-              className="rounded-full border border-white/15 px-3 py-1 text-xs text-zinc-400 disabled:opacity-40"
+              className="glass shrink-0 whitespace-nowrap px-3.5 py-1.5 text-xs text-white/85 disabled:opacity-40"
             >
               {q}
             </button>
@@ -93,32 +106,26 @@ export default function ChatDock({
           e.preventDefault();
           onSend(input);
         }}
-        className="flex gap-2 pb-2"
+        className="mb-2 flex items-center gap-2 rounded-full border border-[#F2A23A]/50 bg-black/40 px-4 py-1.5 backdrop-blur"
       >
+        <WaveIcon className="h-5 w-5 shrink-0 text-[#F2A23A]" />
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           dir={isRtl(input) ? "rtl" : "ltr"}
           placeholder={placeholder}
-          className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-sm placeholder:text-zinc-500"
+          className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-white outline-none placeholder:text-white/45"
         />
         <button
           type="button"
           onClick={onMic}
           disabled={busy}
-          title="Ask by voice — tap to record, tap again to send"
-          className={`rounded-full px-3 py-2 text-sm ${
-            listening ? "bg-rose-500 text-white" : "border border-white/15 text-zinc-300"
+          aria-label="Ask by voice — tap to record, tap again to send"
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+            listening ? "bg-rose-500 text-white" : "bg-white/10 text-white"
           } disabled:opacity-40`}
         >
-          {listening ? "● stop" : "🎙"}
-        </button>
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"
-        >
-          Send
+          <MicIcon className="h-5 w-5" />
         </button>
       </form>
     </div>
