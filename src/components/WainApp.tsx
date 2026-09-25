@@ -85,6 +85,7 @@ export default function WainApp() {
   const [reelUrl, setReelUrl] = useState("");
   const [transcript, setTranscript] = useState("");
   const [extraction, setExtraction] = useState<Record<string, unknown> | null>(null);
+  const [reelHint, setReelHint] = useState<string | null>(null);
   const [localised, setLocalised] = useState<LocalisedText | null>(null);
 
   // Explore
@@ -99,6 +100,11 @@ export default function WainApp() {
   const [posts, setPosts] = useState<RankedPost[]>([]);
   const [mostOrdered, setMostOrdered] = useState<{ dish: string; count: number } | null>(null);
   const [findingCreators, setFindingCreators] = useState(false);
+  const [liveMenu, setLiveMenu] = useState<{ items: MenuItem[]; source: string } | null>(
+    null,
+  );
+  const [findingMenu, setFindingMenu] = useState(false);
+  const [areaBusy, setAreaBusy] = useState(false);
   /** Guards against a slow creator search landing on a place the user left. */
   const openToken = useRef<string | null>(null);
 
@@ -178,6 +184,43 @@ export default function WainApp() {
     [call, origin],
   );
 
+  // Dragging the map is a question in itself: show what food is over there.
+  const areaAt = useRef<{ lat: number; lng: number } | null>(null);
+  const searchArea = useCallback(
+    async (area: { lat: number; lng: number; radius_m: number }) => {
+      // A few metres of drift isn't a new area, and each call costs a request.
+      const last = areaAt.current;
+      if (
+        last &&
+        Math.hypot(last.lat - area.lat, last.lng - area.lng) * 111_000 < area.radius_m / 3
+      ) {
+        return;
+      }
+      areaAt.current = { lat: area.lat, lng: area.lng };
+      setAreaBusy(true);
+      try {
+        const res = await fetch("/api/area", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(area),
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { results: SearchResult[] };
+        if (!data.results.length) {
+          setNote("No food places found in this area.");
+          return;
+        }
+        setResults(data.results);
+        setNote(`${data.results.length} food places in this area`);
+      } catch {
+        // A failed area fetch just leaves the previous pins in place.
+      } finally {
+        setAreaBusy(false);
+      }
+    },
+    [],
+  );
+
   // A first pass of nearby places gives Explore pins and grounds chat before
   // the user types anything.
   const seeded = useRef(false);
@@ -194,6 +237,7 @@ export default function WainApp() {
     setMessages([]);
     setDishes([]);
     setEnrich(null);
+    setLiveMenu(null);
   }
 
   const openPlace = useCallback(async (r: SearchResult, from?: Saw | null) => {
@@ -224,6 +268,11 @@ export default function WainApp() {
         if (openToken.current === r.id) setFindingCreators(false);
       });
 
+    // Places has no menu field, so a Google-only place gets its menu read off
+    // its own pages once enrichment has told us where those pages are.
+    const needsMenu = !r.seed?.menu.length;
+    if (needsMenu) setFindingMenu(true);
+
     fetch("/api/enrich", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -232,8 +281,28 @@ export default function WainApp() {
       ),
     })
       .then((res) => (res.ok ? res.json() : null))
-      .then((d: Enrichment | null) => d?.google && setEnrich(d))
-      .catch(() => {});
+      .then((d: Enrichment | null) => {
+        if (d?.google && openToken.current === r.id) setEnrich(d);
+        if (!needsMenu) return null;
+        return fetch("/api/menu", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: d?.google?.name || r.name_en,
+            city: "Abu Dhabi",
+            website: d?.google?.website ?? "",
+            menu_links: d?.socials?.menu_links ?? [],
+          }),
+        });
+      })
+      .then((res) => (res && res.ok ? res.json() : null))
+      .then((m: { items: MenuItem[]; source: string } | null) => {
+        if (m?.items.length && openToken.current === r.id) setLiveMenu(m);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (openToken.current === r.id) setFindingMenu(false);
+      });
 
     if (r.source !== "wain") return;
     // "Who's been here" loads with the place, no extra tap.
@@ -301,6 +370,7 @@ export default function WainApp() {
     const data = await call<{
       transcript: string;
       from_web: boolean;
+      hint: string | null;
       extraction: Record<string, unknown>;
       results: SearchResult[];
       match: { place: Place } | null;
@@ -311,6 +381,7 @@ export default function WainApp() {
     );
     if (!data) return;
     setExtraction(data.extraction);
+    setReelHint(data.hint);
     const loc = await call<LocalisedText>(
       "/api/localise",
       { text: data.transcript, register: "auto" },
@@ -333,9 +404,9 @@ export default function WainApp() {
       setTab("explore");
       return;
     }
-    if (data.from_web) {
-      setError(
-        "Couldn't tell which place that reel is from — the post isn't indexed. Paste its transcript or a screenshot instead.",
+    if (data.from_web && !data.hint) {
+      setReelHint(
+        "Couldn't tell which place that reel is from — the post isn't indexed. Paste its caption or transcript, or send a screenshot, and I'll find the place.",
       );
     }
   }
@@ -353,6 +424,10 @@ export default function WainApp() {
         history: messages,
         nearby: active?.source === "wain" ? undefined : active ? [active, ...results] : results,
         focusId: active?.source === "google" ? active.id : undefined,
+        // A menu read off the place's own pages is grounding the server
+        // cannot look up itself.
+        focusMenu: active?.source === "google" ? (liveMenu?.items ?? []) : undefined,
+        focusMenuSource: liveMenu?.source,
       },
       "…",
     );
@@ -491,6 +566,8 @@ export default function WainApp() {
             busy={!!busy}
             origin={origin}
             note={note}
+            onAreaSearch={searchArea}
+            areaBusy={areaBusy}
           />
         )}
 
@@ -528,6 +605,8 @@ export default function WainApp() {
           posts={posts}
           mostOrdered={mostOrdered}
           findingCreators={findingCreators}
+          liveMenu={liveMenu}
+          findingMenu={findingMenu}
           saw={saw}
           otherBranches={
             branchResults.some((b) => b.id === active.id)
@@ -561,6 +640,7 @@ export default function WainApp() {
           setTranscript={setTranscript}
           onIngest={ingestReel}
           fromWeb={!transcript.trim()}
+          hint={reelHint}
           extraction={extraction}
           localised={localised}
           busy={!!busy}

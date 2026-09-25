@@ -17,6 +17,20 @@ function platformOf(url: string): string {
   return h;
 }
 
+/**
+ * Instagram has no public oEmbed without a token and serves a login wall to
+ * the page itself, but the embed view of a public post is still readable.
+ */
+function embedUrl(url: string): string | null {
+  const m = url.match(/instagram\.com\/(?:[\w.]+\/)?(p|reel|reels|tv)\/([\w-]+)/i);
+  return m ? `https://www.instagram.com/${m[1] === "reels" ? "reel" : m[1]}/${m[2]}/embed/captioned/` : null;
+}
+
+/** The handle is in the URL itself on TikTok, even when the page won't load. */
+export function handleFromUrl(url: string): string {
+  return url.match(/(?:tiktok\.com|youtube\.com)\/(@[\w.]+)/i)?.[1] ?? "";
+}
+
 function oembedEndpoint(url: string): string | null {
   const p = platformOf(url);
   if (p === "TikTok") return `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`;
@@ -82,20 +96,36 @@ export async function fetchReelMeta(url: string): Promise<ReelMeta | null> {
     }
   }
 
-  try {
-    const res = await fetch(url, { headers: { "User-Agent": UA } });
-    if (!res.ok) return null;
-    const html = await res.text();
-    const caption = decode(meta(html, "og:description") || meta(html, "description"));
-    const title = decode(meta(html, "og:title"));
-    if (!caption && !title) return null;
-    return {
-      caption: [title, caption].filter(Boolean).join(" — "),
-      creator: title.match(/@[\w.]+/)?.[0] ?? "",
-      thumbnail: meta(html, "og:image") || null,
-      platform,
-    };
-  } catch {
-    return null;
+  for (const target of [url, embedUrl(url)].filter((u): u is string => !!u)) {
+    try {
+      const res = await fetch(target, {
+        headers: { "User-Agent": UA },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) continue;
+      const html = await res.text();
+      const caption = decode(meta(html, "og:description") || meta(html, "description"));
+      const title = decode(meta(html, "og:title"));
+      // The embed page carries the caption in the document, not in meta tags.
+      const embedded = decode(
+        html.match(/class="Caption"[\s\S]{0,4000}?<\/div>/i)?.[0]?.replace(/<[^>]+>/g, " ") ?? "",
+      )
+        .replace(/\s+/g, " ")
+        .trim();
+      const handle =
+        html.match(/class="UsernameText">([^<]+)</i)?.[1] ??
+        title.match(/@[\w.]+/)?.[0] ??
+        handleFromUrl(url);
+      if (!caption && !title && !embedded) continue;
+      return {
+        caption: [title, caption, embedded].filter(Boolean).join(" — ").slice(0, 1200),
+        creator: handle.startsWith("@") || !handle ? handle : `@${handle}`,
+        thumbnail: meta(html, "og:image") || null,
+        platform,
+      };
+    } catch {
+      // try the next candidate, then give up honestly
+    }
   }
+  return null;
 }

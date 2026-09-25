@@ -94,6 +94,50 @@ export async function searchText(
   return data.places ?? [];
 }
 
+/** Every kind of food vendor a pin on the map should stand for. */
+const FOOD_TYPES = [
+  "restaurant",
+  "cafe",
+  "coffee_shop",
+  "bakery",
+  "meal_takeaway",
+  "ice_cream_shop",
+  "juice_shop",
+  "sandwich_shop",
+  "dessert_shop",
+];
+
+/** Panning the map asks "what food is here?", which is a nearby, not a text, search. */
+export async function searchNearbyFood(
+  centre: { lat: number; lng: number },
+  radiusM = 1500,
+  maxResultCount = 20,
+): Promise<GooglePlace[]> {
+  const res = await fetch(`${PLACES}/places:searchNearby`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": key(),
+      "X-Goog-FieldMask": `places.${DETAIL_FIELDS.split(",").join(",places.")}`,
+    },
+    body: JSON.stringify({
+      includedTypes: FOOD_TYPES,
+      languageCode: "en",
+      maxResultCount,
+      rankPreference: "DISTANCE",
+      locationRestriction: {
+        circle: {
+          center: { latitude: centre.lat, longitude: centre.lng },
+          radius: Math.min(radiusM, 50000),
+        },
+      },
+    }),
+  });
+  if (!res.ok) throw new Error(`places searchNearby ${res.status}: ${await res.text()}`);
+  const data = (await res.json()) as { places?: GooglePlace[] };
+  return data.places ?? [];
+}
+
 export async function photoUrl(photoName: string, maxPx = 800): Promise<string | null> {
   const res = await fetch(
     `${PLACES}/${photoName}/media?maxHeightPx=${maxPx}&skipHttpRedirect=true&key=${key()}`,

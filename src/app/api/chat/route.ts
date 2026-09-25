@@ -1,7 +1,7 @@
 import { WAIN_SYSTEM_PROMPT } from "@/lib/config";
 import { getPlace } from "@/lib/data";
 import { askJson } from "@/lib/llm";
-import type { ChatMessage, SearchResult } from "@/lib/types";
+import type { ChatMessage, MenuItem, SearchResult } from "@/lib/types";
 
 type ChatResult = {
   reply: string;
@@ -21,13 +21,17 @@ const SCHEMA = {
 };
 
 export async function POST(request: Request) {
-  const { message, placeId, history, nearby, focusId } = (await request.json()) as {
-    message: string;
-    placeId?: string;
-    history: ChatMessage[];
-    nearby?: SearchResult[];
-    focusId?: string;
-  };
+  const { message, placeId, history, nearby, focusId, focusMenu, focusMenuSource } =
+    (await request.json()) as {
+      message: string;
+      placeId?: string;
+      history: ChatMessage[];
+      nearby?: SearchResult[];
+      focusId?: string;
+      /** Menu read live off the focused place's own pages, if any. */
+      focusMenu?: MenuItem[];
+      focusMenuSource?: string;
+    };
 
   const place = placeId ? getPlace(placeId) : undefined;
   if (placeId && !place) return Response.json({ error: "unknown place" }, { status: 404 });
@@ -40,11 +44,18 @@ export async function POST(request: Request) {
   // Without a selected place the nearby results are the only grounding we have,
   // so the model recommends places rather than dishes.
   const focused = focusId ? (nearby ?? []).find((r) => r.id === focusId) : undefined;
+  const live = focusMenu?.length ? focusMenu : null;
 
   const grounding = place
     ? `PLACE DATA (the only source of truth, JSON):\n${JSON.stringify(place)}\n\nAnswer the user's latest message. "dish_ids" must contain the exact name_en values of any dishes you recommend, and nothing else.`
     : `${
-        focused
+        focused && live
+          ? `The user is looking at ${focused.name_en}. Its menu below was read from ${
+              focusMenuSource === "official site" ? "its own website" : "published menu listings"
+            }, so you may quote those dishes and prices and name that source.\n\nMENU FOR ${
+              focused.name_en
+            } (JSON):\n${JSON.stringify(live)}\n\n`
+          : focused
           ? `The user is looking at ${focused.name_en}, which has no menu data. Answer about that place unless they ask for somewhere else.\n\n`
           : "No single place is selected, so recommend from the list below and say how far away each is.\n\n"
       }NEARBY PLACES (the only source of truth, JSON):\n${JSON.stringify(
@@ -69,7 +80,7 @@ export async function POST(request: Request) {
 
   const menu = place
     ? place.menu
-    : (nearby ?? []).flatMap((r) => r.seed?.menu ?? []);
+    : [...(live ?? []), ...(nearby ?? []).flatMap((r) => r.seed?.menu ?? [])];
   const dishes = menu.filter((m) => result.dish_ids.includes(m.name_en));
 
   return Response.json({ ...result, dishes, place_id: place?.id ?? null });

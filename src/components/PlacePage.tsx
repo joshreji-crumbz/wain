@@ -83,6 +83,8 @@ export default function PlacePage({
   posts,
   mostOrdered,
   findingCreators,
+  liveMenu,
+  findingMenu,
   saw,
   onBack,
   onOtherBranches,
@@ -94,6 +96,9 @@ export default function PlacePage({
   posts: RankedPost[];
   mostOrdered: { dish: string; count: number } | null;
   findingCreators: boolean;
+  /** Menu read off the place's own pages, for places with no seeded menu. */
+  liveMenu: { items: MenuItem[]; source: string } | null;
+  findingMenu: boolean;
   saw: Saw | null;
   onBack: () => void;
   onOtherBranches?: () => void;
@@ -110,7 +115,17 @@ export default function PlacePage({
   };
 }) {
   const [fullMenu, setFullMenu] = useState(false);
-  const menu = useMemo(() => result.seed?.menu ?? [], [result.seed]);
+  const menu = useMemo(
+    () => (result.seed?.menu.length ? result.seed.menu : (liveMenu?.items ?? [])),
+    [result.seed, liveMenu],
+  );
+  const menuNote = result.seed?.menu.length
+    ? "sample menu"
+    : liveMenu?.source === "official site"
+      ? "from their website"
+      : liveMenu
+        ? "menu found on the web"
+        : "";
 
   const g = enrich?.google;
   const rating = result.rating ?? g?.rating ?? null;
@@ -283,7 +298,14 @@ export default function PlacePage({
 
           <section className="mt-5">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-[15px] font-semibold">What to try</h2>
+              <h2 className="text-[15px] font-semibold">
+                What to try
+                {menuNote && (
+                  <span className="ml-2 text-[11px] font-normal text-[#A89F94]">
+                    {menuNote}
+                  </span>
+                )}
+              </h2>
               {menu.length > 0 && (
                 <button
                   onClick={() => setFullMenu((v) => !v)}
@@ -294,7 +316,11 @@ export default function PlacePage({
               )}
             </div>
 
-            {menu.length === 0 ? (
+            {menu.length === 0 && findingMenu ? (
+              <div className="glass mt-2 flex items-center gap-2 p-4 text-sm text-[#A89F94]">
+                <Spinner /> looking for their menu…
+              </div>
+            ) : menu.length === 0 ? (
               <button
                 onClick={() => chat.send("شو عندهم؟ what do you know about this place?")}
                 className="glass mt-2 flex w-full items-center justify-between p-4 text-left text-sm"

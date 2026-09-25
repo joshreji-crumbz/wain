@@ -11,6 +11,7 @@ export default function ReelSheet({
   setTranscript,
   onIngest,
   fromWeb,
+  hint,
   extraction,
   localised,
   busy,
@@ -22,6 +23,8 @@ export default function ReelSheet({
   setTranscript: (v: string) => void;
   onIngest: () => void;
   fromWeb: boolean;
+  /** Why a link couldn't be read, and what the user can send instead. */
+  hint: string | null;
   extraction: Record<string, unknown> | null;
   localised: LocalisedText | null;
   busy: boolean;
@@ -68,6 +71,12 @@ export default function ReelSheet({
         >
           {fromWeb ? "Find this place" : "Show it in my language"}
         </button>
+
+        {hint && (
+          <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+            {hint}
+          </p>
+        )}
 
         {extraction && (
           <pre className="overflow-x-auto rounded-xl border border-white/10 bg-black/40 p-3 text-[11px] text-zinc-300">
