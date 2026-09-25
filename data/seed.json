@@ -10,8 +10,8 @@
         "handles": ["alfanar_uae"]
       },
       "area": "Al Maryah Island, Abu Dhabi",
-      "lat": 24.5012,
-      "lng": 54.3881,
+      "lat": 24.50105,
+      "lng": 54.38895,
       "hours": "09:00-23:30",
       "tags": {
         "family_section": true,
@@ -43,8 +43,8 @@
         "handles": ["maryahhotchicken"]
       },
       "area": "The Galleria, Al Maryah Island",
-      "lat": 24.5003,
-      "lng": 54.3865,
+      "lat": 24.50085,
+      "lng": 54.3893,
       "hours": "11:00-02:00",
       "tags": {
         "family_section": true,
@@ -76,8 +76,8 @@
         "handles": ["beitalkarak_ad"]
       },
       "area": "Al Maryah Island waterfront",
-      "lat": 24.4995,
-      "lng": 54.3892,
+      "lat": 24.5013,
+      "lng": 54.3886,
       "hours": "06:00-03:00",
       "tags": {
         "family_section": true,
@@ -109,8 +109,8 @@
         "handles": ["maryahsushibar"]
       },
       "area": "The Galleria, Al Maryah Island",
-      "lat": 24.5019,
-      "lng": 54.3859,
+      "lat": 24.50065,
+      "lng": 54.38875,
       "hours": "12:00-00:00",
       "tags": {
         "family_section": false,
@@ -142,8 +142,8 @@
         "handles": ["mathaqalbahar"]
       },
       "area": "Al Maryah Island, near Galleria",
-      "lat": 24.4988,
-      "lng": 54.3848,
+      "lat": 24.50115,
+      "lng": 54.38955,
       "hours": "12:00-01:00",
       "tags": {
         "family_section": true,

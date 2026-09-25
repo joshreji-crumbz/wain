@@ -37,6 +37,7 @@ const INSTRUCTIONS: Record<string, string> = {
     "Rewrite the text in natural casual English, the way someone would caption a food video. Keep it the same length and tone as the original.",
   arabizi:
     "Rewrite the text in Gulf Arabizi (Arabic typed in Latin letters with digits: 3=ع, 7=ح, 5=خ, 2=ء). Keep it casual and the same length as the original.",
+  auto: "Flip the language of the text: if the source is English, rewrite it in natural spoken Khaleeji Arabic (never Modern Standard Arabic, use أبي، شو، وايد، زين، حار، هني); if the source is Arabic or Arabizi, rewrite it in natural casual English. Keep the same length and tone.",
 };
 
 export async function POST(request: Request) {
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
   };
   if (!text) return Response.json({ error: "text required" }, { status: 400 });
 
-  const style = INSTRUCTIONS[register] ?? INSTRUCTIONS.khaleeji;
+  const style = INSTRUCTIONS[register] ?? INSTRUCTIONS.auto;
 
   const result = await askJson<Omit<LocalisedText, "original">>({
     instructions: `You localise Gulf food content, you do not just translate it. ${style}

@@ -27,7 +27,9 @@ export default function WainApp() {
   const [active, setActive] = useState<Place | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [act, setAct] = useState<Act>("photo");
-  const [register, setRegister] = useState<Register>("khaleeji");
+  const [register, setRegister] = useState<Register | "auto">("auto");
+  const [detected, setDetected] = useState<Register>("khaleeji");
+  const [showOverrides, setShowOverrides] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +38,8 @@ export default function WainApp() {
   const [lat, setLat] = useState("24.5005");
   const [lng, setLng] = useState("54.3870");
   const [signText, setSignText] = useState<{ ar: string; en: string } | null>(null);
+  const [showManualGps, setShowManualGps] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState("default location (Al Maryah)");
 
   // Act 2 — reel
   const [transcript, setTranscript] = useState("");
@@ -65,6 +69,19 @@ export default function WainApp() {
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLat(pos.coords.latitude.toFixed(5));
+        setLng(pos.coords.longitude.toFixed(5));
+        setGpsStatus("using your GPS");
+      },
+      () => setGpsStatus("GPS unavailable, using Al Maryah"),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  }, []);
 
   async function call<T>(url: string, body: unknown, label: string): Promise<T | null> {
     setBusy(label);
@@ -132,7 +149,11 @@ export default function WainApp() {
     const data = await call<{
       posts: RankedPost[];
       most_ordered: { dish: string; count: number } | null;
-    }>("/api/posts", { placeId: active.id, register }, "Ranking creator posts…");
+    }>(
+      "/api/posts",
+      { placeId: active.id, register: register === "auto" ? detected : register },
+      "Ranking creator posts…",
+    );
     if (!data) return;
     setPosts(data.posts);
     setMostOrdered(data.most_ordered);
@@ -143,7 +164,7 @@ export default function WainApp() {
     const next = [...messages, { role: "user" as const, content: text }];
     setMessages(next);
     setInput("");
-    const data = await call<{ reply: string; dishes: MenuItem[] }>(
+    const data = await call<{ reply: string; dishes: MenuItem[]; register: Register }>(
       "/api/chat",
       { message: text, placeId: active.id, history: messages },
       "…",
@@ -151,6 +172,7 @@ export default function WainApp() {
     if (!data) return;
     setMessages([...next, { role: "assistant", content: data.reply }]);
     setDishes(data.dishes);
+    if (data.register) setDetected(data.register);
   }
 
   function toggleMic() {
@@ -189,17 +211,27 @@ export default function WainApp() {
   ];
 
   return (
-    <div className="flex h-screen w-full flex-col bg-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-5 py-3">
+    <div className="flex min-h-screen w-full flex-col bg-zinc-50 md:h-screen">
+      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3">
         <div className="flex items-baseline gap-3">
           <span className="text-xl font-bold tracking-tight text-teal-800">
             WAIN <span className="text-zinc-400">وين</span>
           </span>
-          <span className="text-xs text-zinc-500">See it. Ask it. Find it.</span>
+          <span className="hidden text-xs text-zinc-500 sm:inline">
+            See it. Ask it. Find it.
+          </span>
         </div>
-        <div className="flex items-center gap-2 text-xs">
+        <button
+          onClick={() => setShowOverrides((v) => !v)}
+          className="text-[11px] text-zinc-400 underline"
+        >
+          {register === "auto" ? "auto" : register}
+        </button>
+      </header>
+      {showOverrides && (
+        <div className="flex items-center gap-2 border-b border-zinc-200 bg-white px-4 py-2 text-xs">
           <span className="text-zinc-500">Reply in</span>
-          {(["khaleeji", "arabizi", "english"] as Register[]).map((r) => (
+          {(["auto", "khaleeji", "arabizi", "english"] as const).map((r) => (
             <button
               key={r}
               onClick={() => setRegister(r)}
@@ -213,10 +245,10 @@ export default function WainApp() {
             </button>
           ))}
         </div>
-      </header>
+      )}
 
-      <div className="flex min-h-0 flex-1">
-        <div className="flex w-[46%] min-w-[420px] flex-col border-r border-zinc-200 bg-white">
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+        <div className="flex min-h-0 flex-1 flex-col border-zinc-200 bg-white md:w-[46%] md:min-w-[420px] md:flex-none md:border-r">
           <nav className="flex gap-1 border-b border-zinc-200 px-3 py-2">
             {acts.map((a) => (
               <button
@@ -248,33 +280,48 @@ export default function WainApp() {
                 <p className="text-sm text-zinc-600">
                   Snap the storefront. WAIN reads the Arabic/English sign and cross-checks GPS.
                 </p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => e.target.files?.[0] && onPhotoPicked(e.target.files[0])}
-                  className="block w-full text-xs text-zinc-600 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:text-white"
-                />
-                <div className="flex gap-2">
+                <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-teal-700 px-4 py-6 text-lg font-semibold text-white">
+                  📷 وين هذا؟
                   <input
-                    value={lat}
-                    onChange={(e) => setLat(e.target.value)}
-                    className="w-32 rounded-lg border border-zinc-300 px-2 py-1 text-xs"
-                    placeholder="lat"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => e.target.files?.[0] && onPhotoPicked(e.target.files[0])}
+                    className="hidden"
                   />
-                  <input
-                    value={lng}
-                    onChange={(e) => setLng(e.target.value)}
-                    className="w-32 rounded-lg border border-zinc-300 px-2 py-1 text-xs"
-                    placeholder="lng"
-                  />
-                  <button
-                    onClick={identifyPhoto}
-                    disabled={!photo || !!busy}
-                    className="rounded-lg bg-teal-700 px-3 py-1 text-xs font-medium text-white disabled:opacity-40"
-                  >
-                    وين هذا؟
+                </label>
+
+                <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                  <span>{gpsStatus}</span>
+                  <button onClick={() => setShowManualGps((v) => !v)} className="underline">
+                    set location
                   </button>
                 </div>
+                {showManualGps && (
+                  <div className="flex gap-2">
+                    <input
+                      value={lat}
+                      onChange={(e) => setLat(e.target.value)}
+                      className="w-32 rounded-lg border border-zinc-300 px-2 py-1 text-xs"
+                      placeholder="lat"
+                    />
+                    <input
+                      value={lng}
+                      onChange={(e) => setLng(e.target.value)}
+                      className="w-32 rounded-lg border border-zinc-300 px-2 py-1 text-xs"
+                      placeholder="lng"
+                    />
+                  </div>
+                )}
+                {photo && (
+                  <button
+                    onClick={identifyPhoto}
+                    disabled={!!busy}
+                    className="w-full rounded-xl bg-zinc-900 px-3 py-3 text-sm font-medium text-white disabled:opacity-40"
+                  >
+                    Identify this place
+                  </button>
+                )}
                 {photo && (
                   <Image
                     src={photo}
@@ -520,7 +567,7 @@ export default function WainApp() {
           )}
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="h-44 w-full shrink-0 border-t border-zinc-200 md:h-auto md:min-w-0 md:flex-1 md:border-t-0">
           <MapPanel
             places={places}
             active={active}
