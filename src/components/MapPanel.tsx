@@ -16,6 +16,22 @@ const icon = (active: boolean) =>
     iconAnchor: [9, 9],
   });
 
+/**
+ * Venues inside the same mall share one entrance coordinate in the cached
+ * export, so pins would stack. Fan duplicates out by a few metres.
+ */
+function spread(places: Place[]): [number, number][] {
+  const seen = new Map<string, number>();
+  return places.map((p) => {
+    const key = `${p.lat},${p.lng}`;
+    const n = seen.get(key) ?? 0;
+    seen.set(key, n + 1);
+    if (n === 0) return [p.lat, p.lng];
+    const angle = (n * 2 * Math.PI) / 6;
+    return [p.lat + 0.00008 * Math.cos(angle), p.lng + 0.00008 * Math.sin(angle)];
+  });
+}
+
 function Recenter({ place }: { place: Place | null }) {
   const map = useMap();
   useEffect(() => {
@@ -34,6 +50,7 @@ export default function MapPanel({
   onSelect: (p: Place) => void;
 }) {
   const center: [number, number] = [24.5003, 54.3868];
+  const positions = spread(places);
   return (
     <MapContainer
       center={center}
@@ -46,10 +63,10 @@ export default function MapPanel({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <Recenter place={active} />
-      {places.map((p) => (
+      {places.map((p, i) => (
         <Marker
           key={p.id}
-          position={[p.lat, p.lng]}
+          position={positions[i]}
           icon={icon(active?.id === p.id)}
           eventHandlers={{ click: () => onSelect(p) }}
         >

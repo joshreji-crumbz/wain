@@ -39,6 +39,7 @@ export default function WainApp() {
   const [lng, setLng] = useState("54.3870");
   const [signText, setSignText] = useState<{ ar: string; en: string } | null>(null);
   const [showManualGps, setShowManualGps] = useState(false);
+  const manualGps = useRef(false);
   const [gpsStatus, setGpsStatus] = useState("default location (Al Maryah)");
 
   // Act 2 — reel
@@ -83,6 +84,7 @@ export default function WainApp() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (manualGps.current) return;
         setLat(pos.coords.latitude.toFixed(5));
         setLng(pos.coords.longitude.toFixed(5));
         setGpsStatus("using your GPS");
@@ -186,6 +188,7 @@ export default function WainApp() {
 
   function selectPlace(p: Place, distanceM: number | null = null) {
     setActive(p);
+    setSearchHit(null);
     setDistance(distanceM);
     setPosts([]);
     setMostOrdered(null);
@@ -207,6 +210,7 @@ export default function WainApp() {
       return;
     }
     selectPlace(data.match.place);
+    setSearch("");
     setSearchHit({
       query: search,
       matched_on: data.match.matched_on,
@@ -229,7 +233,8 @@ export default function WainApp() {
       return;
     }
     const rec = new Ctor();
-    rec.lang = register === "english" ? "en-AE" : "ar-AE";
+    const spoken = register === "auto" ? detected : register;
+    rec.lang = spoken === "english" ? "en-AE" : "ar-AE";
     rec.interimResults = false;
     rec.onresult = (event) => {
       const said = event.results[0][0].transcript;
@@ -341,13 +346,21 @@ export default function WainApp() {
                   <div className="flex gap-2">
                     <input
                       value={lat}
-                      onChange={(e) => setLat(e.target.value)}
+                      onChange={(e) => {
+                        manualGps.current = true;
+                        setGpsStatus("manual location");
+                        setLat(e.target.value);
+                      }}
                       className="w-32 rounded-lg border border-zinc-300 px-2 py-1 text-xs"
                       placeholder="lat"
                     />
                     <input
                       value={lng}
-                      onChange={(e) => setLng(e.target.value)}
+                      onChange={(e) => {
+                        manualGps.current = true;
+                        setGpsStatus("manual location");
+                        setLng(e.target.value);
+                      }}
                       className="w-32 rounded-lg border border-zinc-300 px-2 py-1 text-xs"
                       placeholder="lng"
                     />
