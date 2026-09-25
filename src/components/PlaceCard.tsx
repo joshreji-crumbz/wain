@@ -38,20 +38,33 @@ function Action({
   );
 }
 
+export type PlaceLinks = {
+  website?: string;
+  instagram?: string;
+  maps?: string;
+  menu?: string;
+};
+
 export default function PlaceCard({
   place,
   distanceM,
   source,
+  live,
 }: {
   place: Place;
   distanceM?: number | null;
   source?: string;
+  live?: PlaceLinks;
 }) {
   const tags = place.tags;
   const menuSource = place.menu.every((m) => m.source === "official menu")
     ? "official menu"
     : "sample menu";
+  const website = place.links.website || live?.website || "";
+  const instagram = place.links.instagram || live?.instagram || "";
+  const menu = live?.menu || website;
   const maps =
+    live?.maps ||
     place.links.maps ||
     `https://www.openstreetmap.org/?mlat=${place.lat}&mlon=${place.lng}#map=18/${place.lat}/${place.lng}`;
 
@@ -69,9 +82,9 @@ export default function PlaceCard({
 
       <div className="mt-3 flex gap-2">
         <Action href={maps} icon="➤" label="Directions" />
-        <Action href={place.links.website} icon="🍽" label="Menu" />
-        <Action href={place.links.instagram} icon="◎" label="Instagram" />
-        <Action href={place.links.website} icon="↗" label="Website" />
+        <Action href={menu} icon="🍽" label="Menu" />
+        <Action href={instagram} icon="◎" label="Instagram" />
+        <Action href={website} icon="↗" label="Website" />
       </div>
 
       {place.menu.length > 0 && (

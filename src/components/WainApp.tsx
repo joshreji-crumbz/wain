@@ -760,7 +760,17 @@ export default function WainApp() {
 
           {active && (
             <div className="max-h-[55vh] overflow-y-auto border-t border-white/10 p-4">
-              <PlaceCard place={active} distanceM={distance} source="seed.json" />
+              <PlaceCard
+                place={active}
+                distanceM={distance}
+                source="seed.json"
+                live={{
+                  website: enrich?.google?.website,
+                  instagram: enrich?.socials?.instagram,
+                  maps: enrich?.google?.maps,
+                  menu: enrich?.socials?.menu_links[0],
+                }}
+              />
               {enrich?.google && (
                 <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                   <div className="flex items-center justify-between text-xs text-zinc-500">
