@@ -9,8 +9,9 @@ import {
 } from "@/lib/google";
 
 export async function POST(request: Request) {
-  const { id, query, lat, lng } = (await request.json()) as {
+  const { id, googlePlaceId, query, lat, lng } = (await request.json()) as {
     id?: string;
+    googlePlaceId?: string;
     query?: string;
     lat?: number;
     lng?: number;
@@ -23,7 +24,8 @@ export async function POST(request: Request) {
   let google: GooglePlace | null = null;
   try {
     const seeded = id ? getPlace(id) : undefined;
-    const placeId = seeded ? placeIdFromMapsUrl(seeded.links.maps) : null;
+    const placeId =
+      googlePlaceId ?? (seeded ? placeIdFromMapsUrl(seeded.links.maps) : null);
     if (placeId) {
       google = await placeDetails(placeId);
     } else {

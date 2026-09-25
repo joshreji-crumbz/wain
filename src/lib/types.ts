@@ -63,3 +63,20 @@ export type LocalisedText = {
 };
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
+
+/** A row in the Explore list: either a seeded WAIN place or a Google result. */
+export type SearchResult = {
+  source: "wain" | "google";
+  id: string;
+  place_id: string;
+  name_en: string;
+  name_ar: string;
+  address: string;
+  lat: number;
+  lng: number;
+  distance_m: number | null;
+  open_now: boolean | null;
+  rating: number | null;
+  ratings_count: number | null;
+  seed: Place | null;
+};
