@@ -64,6 +64,12 @@ Rules:
   - dish: "Looks like shawarma — no brand visible"
   - unclear: "Can't make out a sign or a dish"`;
 
+/** The interface is Arabic-first, so the evidence line has to be too. */
+const ARABIC_EVIDENCE = `\n- Write "evidence" in Khaleeji Arabic, keeping brand names in their own script:
+  - brand: "لقينا: KFC على الكوب" / "لقينا: الفنار على اللوحة"
+  - dish: "شكلها شاورما — ما فيه اسم محل"
+  - unclear: "ما قدرنا نميز لوحة ولا أكل"`;
+
 function brandResults(brand: string, origin: Origin) {
   const hit = matchPlace(brand, placesWithin(origin, BRANCH_RADIUS_M));
   const q = normaliseName(brand);
@@ -81,11 +87,13 @@ function brandResults(brand: string, origin: Origin) {
 }
 
 export async function POST(request: Request) {
-  const { image, lat, lng } = (await request.json()) as {
+  const { image, lat, lng, lang } = (await request.json()) as {
     image: string;
     lat: number;
     lng: number;
+    lang?: "ar" | "en";
   };
+  const arabic = lang !== "en";
 
   if (!image) return Response.json({ error: "image required" }, { status: 400 });
 
@@ -94,7 +102,7 @@ export async function POST(request: Request) {
   const candidates = nearby.map((p) => `${p.names.en} / ${p.names.ar}`).join("\n");
 
   const read = await askJson<PhotoRead>({
-    instructions: INSTRUCTIONS,
+    instructions: arabic ? `${INSTRUCTIONS}${ARABIC_EVIDENCE}` : INSTRUCTIONS,
     content: [
       textPart(
         `What can this photo be used to find?\n\nRestaurants standing within 500 m of the camera (use one of these exact names for brand_name if the photo clearly shows one of them):\n${
@@ -214,8 +222,12 @@ export async function POST(request: Request) {
   // Tier 3 — nothing usable: ask rather than guess.
   return Response.json({
     tier: "unclear",
-    evidence: read.evidence || "Can't make out a sign or a dish",
-    question: "Point at the sign, or at the plate — or type the name and I'll look it up.",
+    evidence:
+      read.evidence ||
+      (arabic ? "ما قدرنا نميز لوحة ولا أكل" : "Can't make out a sign or a dish"),
+    question: arabic
+      ? "صوّر اللوحة أو الصحن — أو اكتب الاسم وندوّر لك عنه."
+      : "Point at the sign, or at the plate — or type the name and I'll look it up.",
     brand: null,
     sign,
     dish: null,

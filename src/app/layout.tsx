@@ -15,7 +15,7 @@ const plexArabic = IBM_Plex_Sans_Arabic({
 
 export const metadata: Metadata = {
   title: "WAIN — وين",
-  description: "See it. Ask it. Find it. Gulf food discovery in your dialect.",
+  description: "شوفها. اسألها. لقّها. دليلك الخليجي للأكل بلهجتك.",
 };
 
 export const viewport: Viewport = {
@@ -26,7 +26,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="ar"
+      dir="rtl"
       className={`${inter.variable} ${plexArabic.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#0B0907]">{children}</body>

@@ -20,7 +20,8 @@ import {
 } from "./icons";
 import type { BrandProfile } from "@/lib/creators";
 import type { ChatMessage, MenuItem, Post, SearchResult } from "@/lib/types";
-import { Spinner, dishImage, isRtl, metres } from "./ui";
+import { useLang } from "@/lib/i18n";
+import { Spinner, dishImage, isRtl, metres, names, price } from "./ui";
 
 export type Enrichment = {
   google: {
@@ -129,18 +130,21 @@ export default function PlacePage({
     busy: boolean;
   };
 }) {
+  const { t, lang } = useLang();
   const [fullMenu, setFullMenu] = useState(false);
   const menu = useMemo(
     () => (result.seed?.menu.length ? result.seed.menu : (liveMenu?.items ?? [])),
     [result.seed, liveMenu],
   );
   const menuNote = result.seed?.menu.length
-    ? "sample menu"
+    ? t("place.sampleMenu")
     : liveMenu?.source === "official site"
-      ? "from their website"
+      ? t("place.fromWebsite")
       : liveMenu
-        ? "menu found on the web"
+        ? t("place.menuFromWeb")
         : "";
+
+  const title = names(result, lang);
 
   const g = enrich?.google;
   const rating = result.rating ?? g?.rating ?? null;
@@ -166,9 +170,23 @@ export default function PlacePage({
     ] ??
     "";
   const cuisine = (result.seed?.cuisine ?? []).slice(0, 2).join(" · ");
-  const meta = [result.address.split(",")[0], result.distance_m !== null ? metres(result.distance_m) : null]
+  const meta = [
+    result.address.split(",")[0],
+    result.distance_m !== null ? metres(result.distance_m, t) : null,
+  ]
     .filter(Boolean)
     .join(" · ");
+
+  // In Arabic the Arabic reviews and Arabic creator posts read first.
+  const reviews = [...(g?.reviews ?? [])].sort((a, b) =>
+    lang === "ar" ? Number(isRtl(b.text)) - Number(isRtl(a.text)) : 0,
+  );
+  const socialPosts =
+    lang === "ar"
+      ? [...posts].sort(
+          (a, b) => Number(b.lang === "ar") - Number(a.lang === "ar"),
+        )
+      : posts;
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[#0B0907] text-white">
@@ -190,8 +208,8 @@ export default function PlacePage({
           <div className="absolute inset-x-0 top-0 flex items-center justify-between px-3 pt-[calc(env(safe-area-inset-top)+12px)]">
             <button
               onClick={onBack}
-              aria-label="Back"
-              className="rounded-full bg-black/40 p-2 text-white backdrop-blur"
+              aria-label={t("place.back")}
+              className="rounded-full bg-black/40 p-2 text-white backdrop-blur rtl:rotate-180"
             >
               <BackIcon />
             </button>
@@ -209,7 +227,7 @@ export default function PlacePage({
           </div>
 
           {thumbs.length > 0 && (
-            <div className="absolute bottom-16 right-3 flex gap-2">
+            <div className="absolute bottom-16 end-3 flex gap-2">
               {thumbs.map((t) => (
                 <Image
                   key={t}
@@ -227,14 +245,17 @@ export default function PlacePage({
 
         <div className="relative z-10 -mt-6 px-4">
           <h1 className="flex items-center gap-2 text-[26px] font-bold leading-tight">
-            {result.name_en}
+            {title.primary}
             {result.source === "wain" && (
               <VerifiedIcon className="h-5 w-5 text-[#F2A23A]" />
             )}
           </h1>
-          {result.name_ar && (
-            <p dir="rtl" className="text-left text-lg text-[#A89F94]">
-              {result.name_ar}
+          {title.secondary && (
+            <p
+              dir={isRtl(title.secondary) ? "rtl" : "ltr"}
+              className="text-start text-lg text-[#A89F94]"
+            >
+              {title.secondary}
             </p>
           )}
           <p className="mt-1 truncate text-sm text-[#A89F94]">{meta}</p>
@@ -251,7 +272,7 @@ export default function PlacePage({
             )}
             {openNow !== null && (
               <span className={openNow ? "text-emerald-400" : "text-rose-400"}>
-                ● {openNow ? "Open now" : "Closed"}
+                ● {openNow ? t("place.openNow") : t("place.closed")}
               </span>
             )}
           </p>
@@ -260,15 +281,19 @@ export default function PlacePage({
             <Action
               href={maps}
               icon={<DirectionsIcon />}
-              label="Directions"
+              label={t("place.directions")}
               primary
             />
-            <Action href={menuLink} icon={<MenuIcon />} label="Menu" />
-            <Action href={instagram} icon={<InstagramIcon />} label="Instagram" />
+            <Action href={menuLink} icon={<MenuIcon />} label={t("place.menu")} />
+            <Action
+              href={instagram}
+              icon={<InstagramIcon />}
+              label={t("place.instagram")}
+            />
             <Action
               href={website || phone}
               icon={website ? <WebsiteIcon /> : <PhoneIcon />}
-              label={website ? "Website" : "Call"}
+              label={website ? t("place.website") : t("place.call")}
             />
           </div>
 
@@ -282,7 +307,7 @@ export default function PlacePage({
                   rel="noreferrer"
                   className="rounded-full border border-[#F2A23A]/40 bg-[#F2A23A]/10 px-3 py-1 text-xs text-[#F2A23A]"
                 >
-                  Order on {orderName(l)}
+                  {t("place.orderOn", { app: orderName(l) })}
                 </a>
               ))}
             </div>
@@ -293,14 +318,14 @@ export default function PlacePage({
               onClick={onOtherBranches}
               className="mt-3 flex w-full items-center justify-between rounded-2xl px-1 text-sm text-[#F2A23A]"
             >
-              {otherBranches} other branches nearby
-              <ChevronIcon className="h-4 w-4" />
+              {t("place.branches", { n: otherBranches })}
+              <ChevronIcon className="h-4 w-4 rtl:rotate-180" />
             </button>
           ) : null}
 
           {saw && (
             <section className="mt-5">
-              <h2 className="text-[15px] font-semibold">You saw</h2>
+              <h2 className="text-[15px] font-semibold">{t("place.youSaw")}</h2>
               <div className="glass mt-2 flex items-center gap-3 p-3">
                 <Image
                   src={saw.photo}
@@ -313,20 +338,20 @@ export default function PlacePage({
                 <div className="min-w-0 flex-1 text-sm">
                   {saw.item ? (
                     <>
-                      <p className="text-[#A89F94]">This looks like their</p>
+                      <p className="text-[#A89F94]">{t("place.looksLike")}</p>
                       <p className="truncate font-semibold">{saw.item.name_en}</p>
                       <p className="text-[#A89F94]">
-                        AED {saw.item.price_aed} (from menu)
+                        {price(saw.item.price_aed, lang)} · {menuNote || t("place.menu")}
                       </p>
                     </>
                   ) : (
                     <p className="truncate">
-                      <span className="text-[#A89F94]">You saw: </span>
-                      {saw.dish ?? "this place"}
+                      <span className="text-[#A89F94]">{t("place.youSawLabel")}</span>
+                      {saw.dish ?? t("place.thisPlace")}
                     </p>
                   )}
                 </div>
-                <ChevronIcon className="h-5 w-5 shrink-0 text-[#A89F94]" />
+                <ChevronIcon className="h-5 w-5 shrink-0 text-[#A89F94] rtl:rotate-180" />
               </div>
             </section>
           )}
@@ -334,9 +359,9 @@ export default function PlacePage({
           <section className="mt-5">
             <div className="flex items-baseline justify-between">
               <h2 className="text-[15px] font-semibold">
-                What to try
+                {t("place.whatToTry")}
                 {menuNote && (
-                  <span className="ml-2 text-[11px] font-normal text-[#A89F94]">
+                  <span className="ms-2 text-[11px] font-normal text-[#A89F94]">
                     {menuNote}
                   </span>
                 )}
@@ -346,22 +371,22 @@ export default function PlacePage({
                   onClick={() => setFullMenu((v) => !v)}
                   className="text-xs text-[#F2A23A]"
                 >
-                  {fullMenu ? "Show less" : "See full menu →"}
+                  {fullMenu ? t("place.showLess") : t("place.seeFullMenu")}
                 </button>
               )}
             </div>
 
             {menu.length === 0 && findingMenu ? (
               <div className="glass mt-2 flex items-center gap-2 p-4 text-sm text-[#A89F94]">
-                <Spinner /> looking for their menu…
+                <Spinner /> {t("place.findingMenu")}
               </div>
             ) : menu.length === 0 ? (
               <button
-                onClick={() => chat.send("شو عندهم؟ what do you know about this place?")}
-                className="glass mt-2 flex w-full items-center justify-between p-4 text-left text-sm"
+                onClick={() => chat.send(t("place.noMenuAsk"))}
+                className="glass mt-2 flex w-full items-center justify-between p-4 text-start text-sm"
               >
-                No menu yet — ask WAIN
-                <ChevronIcon className="h-4 w-4 text-[#A89F94]" />
+                {t("place.noMenu")}
+                <ChevronIcon className="h-4 w-4 text-[#A89F94] rtl:rotate-180" />
               </button>
             ) : fullMenu ? (
               <ul className="mt-2 space-y-1.5">
@@ -371,10 +396,13 @@ export default function PlacePage({
                     className="glass flex items-center justify-between px-3 py-2.5 text-sm"
                   >
                     <span className="min-w-0 truncate">
-                      {m.name_en} <span dir="rtl">· {m.name_ar}</span>
+                      {names(m, lang).primary}{" "}
+                      <span dir={isRtl(names(m, lang).secondary) ? "rtl" : "ltr"}>
+                        · {names(m, lang).secondary}
+                      </span>
                     </span>
-                    <span className="shrink-0 font-semibold text-[#F2A23A]">
-                      AED {m.price_aed}
+                    <span className="ltr-nums shrink-0 font-semibold text-[#F2A23A]">
+                      {price(m.price_aed, lang)}
                     </span>
                   </li>
                 ))}
@@ -391,9 +419,11 @@ export default function PlacePage({
                       className="h-24 w-32 rounded-2xl object-cover"
                     />
                     <p className="mt-1.5 truncate text-[13px] font-medium">
-                      {m.name_en}
+                      {names(m, lang).primary}
                     </p>
-                    <p className="text-[12px] text-[#A89F94]">AED {m.price_aed}</p>
+                    <p className="ltr-nums text-[12px] text-[#A89F94]">
+                      {price(m.price_aed, lang)}
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -403,21 +433,21 @@ export default function PlacePage({
           {(posts.length > 0 || findingCreators || brandProfiles.length > 0) && (
             <section className="mt-5">
               <div className="flex items-baseline justify-between">
-                <h2 className="text-[15px] font-semibold">Seen on social</h2>
+                <h2 className="text-[15px] font-semibold">{t("place.social")}</h2>
                 {findingCreators ? (
                   <span className="flex items-center gap-1.5 text-xs text-[#A89F94]">
-                    <Spinner /> finding creators…
+                    <Spinner /> {t("place.findingCreators")}
                   </span>
                 ) : (
                   mostOrdered && (
                     <span className="text-xs text-[#A89F94]">
-                      most ordered: {mostOrdered.dish}
+                      {t("place.mostOrdered", { dish: mostOrdered.dish })}
                     </span>
                   )
                 )}
               </div>
               <ul className="no-scrollbar mt-2 flex gap-3 overflow-x-auto pb-1">
-                {posts.map((p) => (
+                {socialPosts.map((p) => (
                   <li key={p.url} className="w-32 shrink-0">
                     <a href={p.url} target="_blank" rel="noreferrer">
                       <span className="relative block">
@@ -429,12 +459,12 @@ export default function PlacePage({
                           className="h-36 w-32 rounded-2xl object-cover"
                         />
                         <span className="absolute inset-0 rounded-2xl bg-black/25" />
-                        <span className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white">
+                        <span className="absolute end-2 top-2 rounded-full bg-black/60 p-1 text-white">
                           <PlayIcon className="h-3.5 w-3.5" />
                         </span>
                         {(p.sample || p.web) && (
-                          <span className="absolute left-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-[#F2A23A]">
-                            {p.sample ? "sample" : "from the web"}
+                          <span className="absolute start-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-[#F2A23A]">
+                            {p.sample ? t("place.sample") : t("place.fromTheWeb")}
                           </span>
                         )}
                       </span>
@@ -445,9 +475,7 @@ export default function PlacePage({
               </ul>
               {!findingCreators && posts.length === 0 && brandProfiles.length > 0 && (
                 <>
-                  <p className="mt-1 text-xs text-[#A89F94]">
-                    No creator posts found — here&apos;s the brand itself.
-                  </p>
+                  <p className="mt-1 text-xs text-[#A89F94]">{t("place.noCreators")}</p>
                   <ul className="mt-2 flex flex-wrap gap-2">
                     {brandProfiles.map((b) => (
                       <li key={b.url}>
@@ -470,9 +498,9 @@ export default function PlacePage({
 
           {g?.reviews?.length ? (
             <section className="mt-5">
-              <h2 className="text-[15px] font-semibold">Google reviews</h2>
+              <h2 className="text-[15px] font-semibold">{t("place.reviews")}</h2>
               <ul className="mt-2 space-y-2">
-                {g.reviews.slice(0, 3).map((r) => (
+                {reviews.slice(0, 3).map((r) => (
                   <li key={r.author + r.text.slice(0, 12)} className="glass p-3 text-xs">
                     <span className="text-[#F2A23A]">★ {r.rating}</span>{" "}
                     <span className="text-[#A89F94]">{r.author}</span>
@@ -516,7 +544,7 @@ export default function PlacePage({
           speaking={chat.speaking}
           listening={chat.listening}
           busy={chat.busy}
-          placeholder={`Ask about ${result.name_en}…`}
+          placeholder={t("place.askAbout", { name: title.primary })}
         />
       </div>
     </div>

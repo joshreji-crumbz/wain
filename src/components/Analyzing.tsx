@@ -11,28 +11,13 @@ import {
   PeopleIcon,
   PinIcon,
 } from "./icons";
+import { type Key, useLang } from "@/lib/i18n";
 
-export const ANALYZING_STEPS = [
-  {
-    icon: EyeIcon,
-    title: "Understanding the image",
-    subtitle: "Signs, logos, text, food…",
-  },
-  {
-    icon: PinIcon,
-    title: "Identifying the restaurant",
-    subtitle: "Reading what's in the frame…",
-  },
-  {
-    icon: DocIcon,
-    title: "Finding places near you",
-    subtitle: "Google Places · 5 km",
-  },
-  {
-    icon: PeopleIcon,
-    title: "Checking menu & info",
-    subtitle: "Website, Instagram, menu…",
-  },
+export const ANALYZING_STEPS: { icon: typeof EyeIcon; title: Key; subtitle: Key }[] = [
+  { icon: EyeIcon, title: "analyzing.step1", subtitle: "analyzing.step1sub" },
+  { icon: PinIcon, title: "analyzing.step2", subtitle: "analyzing.step2sub" },
+  { icon: DocIcon, title: "analyzing.step3", subtitle: "analyzing.step3sub" },
+  { icon: PeopleIcon, title: "analyzing.step4", subtitle: "analyzing.step4sub" },
 ];
 
 /**
@@ -50,15 +35,16 @@ export default function Analyzing({
   evidence: string | null;
   onBack: () => void;
 }) {
+  const { t } = useLang();
   const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (done) return;
-    const t = setInterval(
+    const id = setInterval(
       () => setStep((s) => Math.min(s + 1, ANALYZING_STEPS.length - 1)),
       1200,
     );
-    return () => clearInterval(t);
+    return () => clearInterval(id);
   }, [done]);
 
   const progress = done ? 100 : ((step + 1) / (ANALYZING_STEPS.length + 1)) * 100;
@@ -79,12 +65,12 @@ export default function Analyzing({
       <div className="relative flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top)+14px)]">
         <button
           onClick={onBack}
-          aria-label="Back"
-          className="rounded-full p-2 text-white/80"
+          aria-label={t("analyzing.back")}
+          className="rounded-full p-2 text-white/80 rtl:rotate-180"
         >
           <BackIcon />
         </button>
-        <span className="text-sm text-white/90">Analyzing your content…</span>
+        <span className="text-sm text-white/90">{t("analyzing.title")}</span>
         <span className="rounded-full p-2 text-white/50">
           <DotsIcon />
         </span>
@@ -97,7 +83,7 @@ export default function Analyzing({
               // Step 2 waits for the real answer; the rest can tick on the timer.
               const complete = i === 1 ? !!evidence : done || i < step;
               const Icon = s.icon;
-              const subtitle = i === 1 && evidence ? evidence : s.subtitle;
+              const subtitle = i === 1 && evidence ? evidence : t(s.subtitle);
               return (
                 <li key={s.title} className="flex items-center gap-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/8 text-[#F2A23A]">
@@ -105,7 +91,7 @@ export default function Analyzing({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px] font-semibold text-white">
-                      {s.title}
+                      {t(s.title)}
                     </span>
                     <span className="block truncate text-[13px] text-[#A89F94]">
                       {subtitle}

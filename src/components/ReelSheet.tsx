@@ -3,7 +3,8 @@
 import { useState } from "react";
 import type { LocalisedText, SearchResult } from "@/lib/types";
 import { ChevronIcon } from "./icons";
-import { Spinner, isRtl, metres } from "./ui";
+import { useLang } from "@/lib/i18n";
+import { Spinner, isRtl, metres, names, price } from "./ui";
 
 /** Where an order link points, so the button can be named after the app. */
 function platformOf(url: string): string {
@@ -50,6 +51,7 @@ export default function ReelSheet({
   busy: boolean;
   onClose: () => void;
 }) {
+  const { t, lang } = useLang();
   const [showOriginal, setShowOriginal] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const place = typeof extraction?.place_guess === "string" ? extraction.place_guess : "";
@@ -65,28 +67,26 @@ export default function ReelSheet({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#100d0b] text-zinc-100">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-        <h2 className="text-sm font-semibold">Paste a reel</h2>
+        <h2 className="text-sm font-semibold">{t("reel.title")}</h2>
         <button onClick={onClose} className="text-sm text-zinc-400">
-          ✕ Close
+          ✕ {t("reel.close")}
         </button>
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-        <p className="text-sm text-zinc-400">
-          Paste a reel link and WAIN looks it up on the web — creator, caption, place and dish —
-          then finds that place near you. Add the transcript if you have it.
-        </p>
+        <p className="text-sm text-zinc-400">{t("reel.intro")}</p>
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://www.tiktok.com/…"
+          dir="ltr"
           className="w-full rounded-lg border border-white/15 bg-transparent px-3 py-2 text-xs"
         />
         <textarea
           value={transcript}
           onChange={(e) => setTranscript(e.target.value)}
           rows={5}
-          dir={isRtl(transcript) ? "rtl" : "ltr"}
-          placeholder="Optional: reel transcript (English, Khaleeji or Arabizi)…"
+          dir={transcript ? (isRtl(transcript) ? "rtl" : "ltr") : undefined}
+          placeholder={t("reel.transcriptPlaceholder")}
           className="w-full rounded-lg border border-white/15 bg-transparent px-3 py-2 text-sm"
         />
         <button
@@ -94,7 +94,7 @@ export default function ReelSheet({
           disabled={(!transcript.trim() && !url.trim()) || busy}
           className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black disabled:opacity-40"
         >
-          {fromWeb ? "Find this place" : "Show it in my language"}
+          {fromWeb ? t("reel.findPlace") : t("reel.showMine")}
         </button>
 
         {busy && step && (
@@ -117,7 +117,7 @@ export default function ReelSheet({
                   rel="noreferrer"
                   className="rounded-full border border-white/15 px-3 py-1 text-xs"
                 >
-                  Google Maps
+                  {t("reel.maps")}
                 </a>
               )}
               {delivery.map((d) => (
@@ -128,7 +128,7 @@ export default function ReelSheet({
                   rel="noreferrer"
                   className="rounded-full border border-[#F2A23A]/40 bg-[#F2A23A]/10 px-3 py-1 text-xs text-[#F2A23A]"
                 >
-                  Order on {platformOf(d)}
+                  {t("place.orderOn", { app: platformOf(d) })}
                 </a>
               ))}
             </div>
@@ -138,15 +138,15 @@ export default function ReelSheet({
                   <button
                     key={r.id}
                     onClick={() => onOpen(r)}
-                    className="flex w-full items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-left text-xs"
+                    className="flex w-full items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-start text-xs"
                   >
                     <span className="truncate">
-                      {r.name_en}
+                      {names(r, lang).primary}
                       {r.distance_m !== null && (
-                        <span className="text-zinc-400"> · {metres(r.distance_m)}</span>
+                        <span className="text-zinc-400"> · {metres(r.distance_m, t)}</span>
                       )}
                     </span>
-                    <ChevronIcon className="h-4 w-4 shrink-0 text-zinc-400" />
+                    <ChevronIcon className="h-4 w-4 shrink-0 text-zinc-400 rtl:rotate-180" />
                   </button>
                 ))}
               </div>
@@ -165,7 +165,7 @@ export default function ReelSheet({
             onClick={() => setShowNotes(!showNotes)}
             className="text-xs text-zinc-400 underline"
           >
-            {showNotes ? "hide what the web said" : "what the web said"}
+            {showNotes ? t("reel.hideWebSaid") : t("reel.whatWebSaid")}
           </button>
         )}
 
@@ -179,13 +179,13 @@ export default function ReelSheet({
           <div className="rounded-xl border border-white/10 bg-white/5 p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-[11px] uppercase tracking-wide text-zinc-500">
-                {showOriginal ? "original" : "localised"}
+                {showOriginal ? t("reel.original") : t("reel.localised")}
               </span>
               <button
                 onClick={() => setShowOriginal(!showOriginal)}
                 className="rounded-full border border-white/15 px-2 py-0.5 text-[11px] text-zinc-400"
               >
-                {showOriginal ? "show localised" : "show original"}
+                {showOriginal ? t("reel.showLocalised") : t("reel.showOriginal")}
               </button>
             </div>
             <p dir={isRtl(body) ? "rtl" : "ltr"} className="text-sm leading-relaxed text-zinc-100">
@@ -194,20 +194,22 @@ export default function ReelSheet({
             <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
               {localised.flags.halal === true && (
                 <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-emerald-300">
-                  halal
+                  {t("reel.halal")}
                 </span>
               )}
               {localised.flags.alcohol && (
                 <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-amber-300">
-                  alcohol
+                  {t("reel.alcohol")}
                 </span>
               )}
               {localised.flags.pork && (
-                <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-rose-300">pork</span>
+                <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-rose-300">
+                  {t("reel.pork")}
+                </span>
               )}
               {localised.prices_aed.map((p) => (
                 <span key={p} className="rounded-full bg-white/10 px-2 py-0.5 text-zinc-300">
-                  {p} AED
+                  {price(p, lang)}
                 </span>
               ))}
             </div>

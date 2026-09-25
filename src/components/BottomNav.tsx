@@ -1,13 +1,18 @@
 "use client";
 
 import { CameraIcon, ChatIcon, MapIcon } from "./icons";
+import { type Key, useLang } from "@/lib/i18n";
 
 export type Tab = "home" | "explore" | "ask";
 
-const TABS: { id: Tab; label: string; Icon: (p: { className?: string }) => React.ReactElement }[] = [
-  { id: "home", label: "وين", Icon: CameraIcon },
-  { id: "explore", label: "Explore", Icon: MapIcon },
-  { id: "ask", label: "Ask", Icon: ChatIcon },
+const TABS: {
+  id: Tab;
+  label: Key;
+  Icon: (p: { className?: string }) => React.ReactElement;
+}[] = [
+  { id: "home", label: "nav.home", Icon: CameraIcon },
+  { id: "explore", label: "nav.explore", Icon: MapIcon },
+  { id: "ask", label: "nav.ask", Icon: ChatIcon },
 ];
 
 export default function BottomNav({
@@ -17,6 +22,7 @@ export default function BottomNav({
   tab: Tab;
   onChange: (t: Tab) => void;
 }) {
+  const { t } = useLang();
   return (
     <nav className="sticky bottom-0 z-30 flex border-t border-white/8 bg-[#0B0907]/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
       {TABS.map(({ id, label, Icon }) => (
@@ -29,7 +35,7 @@ export default function BottomNav({
           }`}
         >
           <Icon className="h-5 w-5" />
-          {label}
+          {t(label)}
         </button>
       ))}
     </nav>

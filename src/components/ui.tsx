@@ -1,3 +1,5 @@
+import type { Lang, Translate } from "@/lib/i18n";
+
 export function isRtl(text: string) {
   return /[\u0600-\u06FF]/.test(text);
 }
@@ -8,9 +10,26 @@ export function Spinner() {
   );
 }
 
-export function metres(d: number | null | undefined) {
+export function metres(d: number | null | undefined, t?: Translate) {
   if (d === null || d === undefined) return "";
-  return d < 1000 ? `${d} m` : `${(d / 1000).toFixed(1)} km`;
+  const unit = d < 1000 ? (t ? t("unit.m") : "m") : t ? t("unit.km") : "km";
+  return d < 1000 ? `${d} ${unit}` : `${(d / 1000).toFixed(1)} ${unit}`;
+}
+
+/** Arabic reads first in Arabic; the other spelling stays as the subtitle. */
+export function names(
+  x: { name_en: string; name_ar: string },
+  lang: Lang,
+): { primary: string; secondary: string } {
+  const arabicFirst = lang === "ar" && !!x.name_ar;
+  return {
+    primary: arabicFirst ? x.name_ar : x.name_en,
+    secondary: arabicFirst ? x.name_en : x.name_ar,
+  };
+}
+
+export function price(aed: number, lang: Lang) {
+  return lang === "ar" ? `${aed} درهم` : `AED ${aed}`;
 }
 
 const DISH_IMAGES: { test: RegExp; file: string }[] = [
