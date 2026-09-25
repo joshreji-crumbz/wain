@@ -33,12 +33,18 @@ export async function POST(request: Request) {
   const origin = { lat, lng };
   const nearby = placesWithin(origin, 500);
 
+  const candidates = nearby
+    .map((p) => `${p.names.en} / ${p.names.ar}`)
+    .join("\n");
+
   const sign = await askJson<SignRead>({
-    instructions:
-      "You read restaurant storefront signs in Gulf cities. Signs are often bilingual Arabic/English. Transcribe exactly what is on the sign, do not invent. If a field is not visible, return an empty string.",
+    instructions: `You read restaurant storefront signs in Gulf cities. Signs are often bilingual Arabic/English, and the Arabic is frequently a transliteration of a foreign brand name rather than a translation.
+Transcribe the Arabic letter by letter exactly as written, keeping every letter of every word; never drop or guess letters, and never translate the Arabic into English in the Arabic field.
+If a field is not visible on the sign, return an empty string rather than inventing one.
+A list of restaurants standing within 500 m of the camera is provided. If the sign clearly corresponds to one of them, set best_guess_name to that exact listed name; otherwise set it to what the sign itself says.`,
     content: [
       textPart(
-        "Read the restaurant sign in this photo. Return the Arabic text, the English text, and your single best guess at the restaurant name.",
+        `Read the restaurant sign in this photo. Return the Arabic text, the English text, and your single best guess at the restaurant name.\n\nRestaurants within 500 m:\n${candidates || "(none)"}`,
       ),
       imagePart(image),
     ],
