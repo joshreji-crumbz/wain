@@ -110,7 +110,6 @@ const AR = {
   "chat.mic": "اسأل بصوتك — اضغط للتسجيل، واضغط مرة ثانية للإرسال",
   "chat.speak": "اسمع الرد",
   "chat.aboutPlace": "نجاوبك عن {name}.",
-  "chat.aboutNearby": "نجاوبك من {n} مكان قريب منك — افتح واحد عشان منيوه.",
   "chat.prompt1": "شو أطلب؟ أبي شي حار تحت خمسين",
   "chat.prompt2": "وين أقرب مطعم مفتوح؟",
   "chat.prompt3": "shu fi 7awali?",
@@ -257,7 +256,6 @@ const EN: Record<Key, string> = {
   "chat.mic": "Ask by voice — tap to record, tap again to send",
   "chat.speak": "Read this out loud",
   "chat.aboutPlace": "Answering about {name}.",
-  "chat.aboutNearby": "Answering from {n} places near you — open one for its menu.",
   "chat.prompt1": "What's good here under 50?",
   "chat.prompt2": "Where's the closest place open now?",
   "chat.prompt3": "shu fi 7awali?",
@@ -301,7 +299,7 @@ const EN: Record<Key, string> = {
   "error.reelUnknown":
     "Couldn't tell which place that reel is from — the post isn't indexed. Paste its caption or transcript, or send a screenshot, and I'll find the place.",
 
-  "lang.toggle": "ع",
+  "lang.toggle": "AR",
   "lang.toggleAria": "التبديل إلى العربية",
   "currency": "AED",
   "unit.m": "m",
