@@ -1,0 +1,172 @@
+{
+  "posts": [
+    {
+      "place_id": "galleria-hot-chicken",
+      "sample": true,
+      "platform": "tiktok",
+      "url": "https://example.com/sample-post-1",
+      "creator": "@sample_creator_1",
+      "creator_region": "gulf",
+      "lang": "ar-khaleeji",
+      "posted": "2026-09-10",
+      "transcript": "وايد زين الدجاج الحار هني، طلبت الساندويتش بـ 45 درهم وكان حار عدل.",
+      "dishes_mentioned": ["Nashville Hot Chicken Sandwich"]
+    },
+    {
+      "place_id": "galleria-hot-chicken",
+      "sample": true,
+      "platform": "instagram",
+      "url": "https://example.com/sample-post-2",
+      "creator": "@sample_creator_2",
+      "creator_region": "gulf",
+      "lang": "arabizi",
+      "posted": "2026-09-02",
+      "transcript": "el hot chicken 3andhom 7ar wayed, w el fries ma tfoot",
+      "dishes_mentioned": ["Nashville Hot Chicken Sandwich", "Loaded Fries"]
+    },
+    {
+      "place_id": "galleria-hot-chicken",
+      "sample": true,
+      "platform": "tiktok",
+      "url": "https://example.com/sample-post-3",
+      "creator": "@sample_creator_3",
+      "creator_region": "other",
+      "lang": "en",
+      "posted": "2026-09-18",
+      "transcript": "Got the hot chicken sandwich for 45 dirhams, easily the best fried chicken on Maryah.",
+      "dishes_mentioned": ["Nashville Hot Chicken Sandwich"]
+    },
+    {
+      "place_id": "galleria-hot-chicken",
+      "sample": true,
+      "platform": "instagram",
+      "url": "https://example.com/sample-post-4",
+      "creator": "@sample_creator_4",
+      "creator_region": "gulf",
+      "lang": "ar-khaleeji",
+      "posted": "2026-08-21",
+      "transcript": "جربت السماش برجر وكان زين بس الدجاج الحار أحلى.",
+      "dishes_mentioned": ["Smash Burger", "Nashville Hot Chicken Sandwich"]
+    },
+    {
+      "place_id": "galleria-hot-chicken",
+      "sample": true,
+      "platform": "tiktok",
+      "url": "https://example.com/sample-post-5",
+      "creator": "@sample_creator_5",
+      "creator_region": "other",
+      "lang": "en",
+      "posted": "2026-07-30",
+      "transcript": "Late night tenders run, spicy tenders were 38 and still open at 1am.",
+      "dishes_mentioned": ["Spicy Chicken Tenders"]
+    },
+    {
+      "place_id": "al-fanar-maryah",
+      "sample": true,
+      "platform": "tiktok",
+      "url": "https://example.com/sample-post-6",
+      "creator": "@sample_creator_6",
+      "creator_region": "gulf",
+      "lang": "ar-khaleeji",
+      "posted": "2026-09-14",
+      "transcript": "المجبوس دجاج هني أبي أقول لكم وايد زين، و اللقيمات لا تفوتونها.",
+      "dishes_mentioned": ["Chicken Machboos", "Luqaimat"]
+    },
+    {
+      "place_id": "al-fanar-maryah",
+      "sample": true,
+      "platform": "instagram",
+      "url": "https://example.com/sample-post-7",
+      "creator": "@sample_creator_7",
+      "creator_region": "gulf",
+      "lang": "arabizi",
+      "posted": "2026-08-28",
+      "transcript": "el machboos 3andhom 7elw w el karak ma yenfa3 tfoota",
+      "dishes_mentioned": ["Chicken Machboos", "Karak Chai"]
+    },
+    {
+      "place_id": "al-fanar-maryah",
+      "sample": true,
+      "platform": "tiktok",
+      "url": "https://example.com/sample-post-8",
+      "creator": "@sample_creator_8",
+      "creator_region": "other",
+      "lang": "en",
+      "posted": "2026-09-01",
+      "transcript": "Tried the lamb harees here, super comforting and only 55 AED.",
+      "dishes_mentioned": ["Lamb Harees"]
+    },
+    {
+      "place_id": "al-fanar-maryah",
+      "sample": true,
+      "platform": "instagram",
+      "url": "https://example.com/sample-post-9",
+      "creator": "@sample_creator_9",
+      "creator_region": "gulf",
+      "lang": "ar-khaleeji",
+      "posted": "2026-07-19",
+      "transcript": "عرض الإفطار هني زين للعائلة، والمجبوس كان أحلى شي بالطاولة.",
+      "dishes_mentioned": ["Chicken Machboos"]
+    },
+    {
+      "place_id": "beit-el-karak",
+      "sample": true,
+      "platform": "tiktok",
+      "url": "https://example.com/sample-post-10",
+      "creator": "@sample_creator_10",
+      "creator_region": "gulf",
+      "lang": "ar-khaleeji",
+      "posted": "2026-09-20",
+      "transcript": "أحلى كرك في مريا، و يفتحون للسحور بعد.",
+      "dishes_mentioned": ["Karak Chai"]
+    },
+    {
+      "place_id": "beit-el-karak",
+      "sample": true,
+      "platform": "instagram",
+      "url": "https://example.com/sample-post-11",
+      "creator": "@sample_creator_11",
+      "creator_region": "gulf",
+      "lang": "arabizi",
+      "posted": "2026-09-05",
+      "transcript": "el karak 3andhom 7elw w el ragag bel jebn wayed zain",
+      "dishes_mentioned": ["Karak Chai", "Regag with Cheese"]
+    },
+    {
+      "place_id": "beit-el-karak",
+      "sample": true,
+      "platform": "tiktok",
+      "url": "https://example.com/sample-post-12",
+      "creator": "@sample_creator_12",
+      "creator_region": "other",
+      "lang": "en",
+      "posted": "2026-08-12",
+      "transcript": "Suhoor spot that actually stays open till 3am, balaleet was 22 dirhams.",
+      "dishes_mentioned": ["Balaleet"]
+    },
+    {
+      "place_id": "beit-el-karak",
+      "sample": true,
+      "platform": "instagram",
+      "url": "https://example.com/sample-post-13",
+      "creator": "@sample_creator_13",
+      "creator_region": "gulf",
+      "lang": "ar-khaleeji",
+      "posted": "2026-07-25",
+      "transcript": "الصالونة دجاج حارة شوي بس زينة، والمكان يسع جمعة كبيرة.",
+      "dishes_mentioned": ["Chicken Saloona"]
+    },
+    {
+      "place_id": "beit-el-karak",
+      "sample": true,
+      "platform": "tiktok",
+      "url": "https://example.com/sample-post-14",
+      "creator": "@sample_creator_14",
+      "creator_region": "gulf",
+      "lang": "ar-khaleeji",
+      "posted": "2026-06-30",
+      "transcript": "كل يوم أشرب كرك من هني، 9 دراهم بس.",
+      "dishes_mentioned": ["Karak Chai"]
+    }
+  ]
+}
