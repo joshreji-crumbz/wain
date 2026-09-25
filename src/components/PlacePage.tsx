@@ -18,6 +18,7 @@ import {
   VerifiedIcon,
   WebsiteIcon,
 } from "./icons";
+import type { BrandProfile } from "@/lib/creators";
 import type { ChatMessage, MenuItem, Post, SearchResult } from "@/lib/types";
 import { Spinner, dishImage, isRtl, metres } from "./ui";
 
@@ -93,6 +94,7 @@ export default function PlacePage({
   posts,
   mostOrdered,
   findingCreators,
+  brandProfiles,
   liveMenu,
   findingMenu,
   saw,
@@ -106,6 +108,7 @@ export default function PlacePage({
   posts: RankedPost[];
   mostOrdered: { dish: string; count: number } | null;
   findingCreators: boolean;
+  brandProfiles: BrandProfile[];
   /** Menu read off the place's own pages, for places with no seeded menu. */
   liveMenu: { items: MenuItem[]; source: string } | null;
   findingMenu: boolean;
@@ -397,7 +400,7 @@ export default function PlacePage({
             )}
           </section>
 
-          {(posts.length > 0 || findingCreators) && (
+          {(posts.length > 0 || findingCreators || brandProfiles.length > 0) && (
             <section className="mt-5">
               <div className="flex items-baseline justify-between">
                 <h2 className="text-[15px] font-semibold">Seen on social</h2>
@@ -440,6 +443,28 @@ export default function PlacePage({
                   </li>
                 ))}
               </ul>
+              {!findingCreators && posts.length === 0 && brandProfiles.length > 0 && (
+                <>
+                  <p className="mt-1 text-xs text-[#A89F94]">
+                    No creator posts found — here&apos;s the brand itself.
+                  </p>
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {brandProfiles.map((b) => (
+                      <li key={b.url}>
+                        <a
+                          href={b.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px]"
+                        >
+                          <span className="text-[#F2A23A]">{b.platform}</span>
+                          {b.handle}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </section>
           )}
 
