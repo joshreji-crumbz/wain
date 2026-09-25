@@ -9,8 +9,8 @@ import type { Place } from "@/lib/types";
 const icon = (active: boolean) =>
   L.divIcon({
     className: "",
-    html: `<div style="width:18px;height:18px;border-radius:9999px;border:3px solid white;box-shadow:0 1px 6px rgba(0,0,0,.4);background:${
-      active ? "#e11d48" : "#0f766e"
+    html: `<div style="width:18px;height:18px;border-radius:9999px;border:3px solid #100d0b;box-shadow:0 1px 6px rgba(0,0,0,.4);background:${
+      active ? "#f59e0b" : "#a16207"
     }"></div>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9],
@@ -60,8 +60,8 @@ export default function MapPanel({
       scrollWheelZoom
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       <Recenter place={active} />
       {places.map((p, i) => (

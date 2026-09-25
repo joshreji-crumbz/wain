@@ -1,0 +1,143 @@
+const PLACES = "https://places.googleapis.com/v1";
+
+const DETAIL_FIELDS = [
+  "id",
+  "displayName",
+  "formattedAddress",
+  "rating",
+  "userRatingCount",
+  "priceLevel",
+  "websiteUri",
+  "nationalPhoneNumber",
+  "googleMapsUri",
+  "regularOpeningHours.weekdayDescriptions",
+  "regularOpeningHours.openNow",
+  "photos.name",
+  "reviews.text",
+  "reviews.rating",
+  "reviews.originalText",
+  "reviews.authorAttribution.displayName",
+].join(",");
+
+export type GooglePlace = {
+  id: string;
+  displayName?: { text: string; languageCode?: string };
+  formattedAddress?: string;
+  rating?: number;
+  userRatingCount?: number;
+  priceLevel?: string;
+  websiteUri?: string;
+  nationalPhoneNumber?: string;
+  googleMapsUri?: string;
+  regularOpeningHours?: { weekdayDescriptions?: string[]; openNow?: boolean };
+  photos?: { name: string }[];
+  reviews?: {
+    rating?: number;
+    text?: { text: string; languageCode?: string };
+    originalText?: { text: string; languageCode?: string };
+    authorAttribution?: { displayName?: string };
+  }[];
+};
+
+function key(): string {
+  const k = process.env.GOOGLE_MAPS_API_KEY;
+  if (!k) throw new Error("GOOGLE_MAPS_API_KEY is not set");
+  return k;
+}
+
+/** Place ids are stored in the seed as `…/maps/place/?q=place_id:ChIJ…`. */
+export function placeIdFromMapsUrl(url: string): string | null {
+  const m = url.match(/place_id:([A-Za-z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+export async function placeDetails(placeId: string): Promise<GooglePlace> {
+  const res = await fetch(`${PLACES}/places/${placeId}?languageCode=en`, {
+    headers: { "X-Goog-Api-Key": key(), "X-Goog-FieldMask": DETAIL_FIELDS },
+  });
+  if (!res.ok) throw new Error(`places details ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+export async function searchText(
+  query: string,
+  origin: { lat: number; lng: number },
+  radiusM = 2000,
+): Promise<GooglePlace[]> {
+  const res = await fetch(`${PLACES}/places:searchText`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": key(),
+      "X-Goog-FieldMask": `places.${DETAIL_FIELDS.split(",").join(",places.")}`,
+    },
+    body: JSON.stringify({
+      textQuery: query,
+      languageCode: "en",
+      maxResultCount: 5,
+      locationBias: {
+        circle: { center: { latitude: origin.lat, longitude: origin.lng }, radius: radiusM },
+      },
+    }),
+  });
+  if (!res.ok) throw new Error(`places searchText ${res.status}: ${await res.text()}`);
+  const data = (await res.json()) as { places?: GooglePlace[] };
+  return data.places ?? [];
+}
+
+export async function photoUrl(photoName: string, maxPx = 800): Promise<string | null> {
+  const res = await fetch(
+    `${PLACES}/${photoName}/media?maxHeightPx=${maxPx}&skipHttpRedirect=true&key=${key()}`,
+  );
+  if (!res.ok) return null;
+  const data = (await res.json()) as { photoUri?: string };
+  return data.photoUri ?? null;
+}
+
+export type SiteLinks = {
+  instagram: string;
+  tiktok: string;
+  menu_links: string[];
+};
+
+/**
+ * Places has no menu field: the official site is the only authoritative hop to
+ * a menu or a social handle, so read the homepage HTML and pull both out.
+ */
+export async function siteLinks(website: string): Promise<SiteLinks> {
+  const empty: SiteLinks = { instagram: "", tiktok: "", menu_links: [] };
+  if (!website) return empty;
+  let html: string;
+  try {
+    const res = await fetch(website, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; WAIN/1.0)" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return empty;
+    html = await res.text();
+  } catch {
+    return empty;
+  }
+
+  const first = (re: RegExp) => html.match(re)?.[0] ?? "";
+  const instagram = first(/https?:\/\/(?:www\.)?instagram\.com\/[A-Za-z0-9_.]+/);
+  const tiktok = first(/https?:\/\/(?:www\.)?tiktok\.com\/@[A-Za-z0-9_.]+/);
+
+  const hrefs = [...html.matchAll(/href=["']([^"']+)["']/gi)].map((m) => m[1]);
+  const menu_links = [
+    ...new Set(
+      hrefs
+        .filter((h) => /menu|قائمة|deliveroo|talabat|zomato|\.pdf$/i.test(h))
+        .map((h) => {
+          try {
+            return new URL(h, website).toString();
+          } catch {
+            return "";
+          }
+        })
+        .filter(Boolean),
+    ),
+  ].slice(0, 5);
+
+  return { instagram, tiktok, menu_links };
+}
