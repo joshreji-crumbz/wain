@@ -33,7 +33,7 @@ function loadMaps(key: string): Promise<void> {
     const cb = "__wainMapsReady";
     (window as unknown as Record<string, () => void>)[cb] = () => resolve();
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&v=weekly&callback=${cb}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&v=weekly&libraries=geometry&callback=${cb}`;
     script.async = true;
     script.onerror = () => reject(new Error("Google Maps failed to load"));
     document.head.appendChild(script);
@@ -48,6 +48,7 @@ export default function GoogleMapView({
   onSelect,
   interactive,
   onMapTap,
+  onAreaChanged,
   className = "",
 }: {
   center: { lat: number; lng: number };
@@ -57,6 +58,8 @@ export default function GoogleMapView({
   /** false keeps page scrolling over the map (gestureHandling "none"). */
   interactive: boolean;
   onMapTap?: () => void;
+  /** Fires after the user drags or zooms, with the new centre and view radius. */
+  onAreaChanged?: (area: { lat: number; lng: number; radius_m: number }) => void;
   className?: string;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -64,6 +67,12 @@ export default function GoogleMapView({
   const pins = useRef<google.maps.Marker[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  // Keeping the callback in a ref lets the listener be attached once.
+  const areaChanged = useRef(onAreaChanged);
+  const moved = useRef(false);
+  useEffect(() => {
+    areaChanged.current = onAreaChanged;
+  }, [onAreaChanged]);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY ?? "";
 
   useEffect(() => {
@@ -81,6 +90,30 @@ export default function GoogleMapView({
           clickableIcons: false,
         });
         setReady(true);
+
+        // Only a gesture should trigger a refetch; programmatic panTo must not.
+        map.current.addListener("dragstart", () => {
+          moved.current = true;
+        });
+        map.current.addListener("zoom_changed", () => {
+          moved.current = true;
+        });
+        map.current.addListener("idle", () => {
+          if (!moved.current || !map.current) return;
+          moved.current = false;
+          const c = map.current.getCenter();
+          const bounds = map.current.getBounds();
+          if (!c || !bounds) return;
+          const ne = bounds.getNorthEast();
+          const radius = google.maps.geometry?.spherical
+            ? google.maps.geometry.spherical.computeDistanceBetween(c, ne)
+            : 1500;
+          areaChanged.current?.({
+            lat: c.lat(),
+            lng: c.lng(),
+            radius_m: Math.round(radius),
+          });
+        });
       })
       .catch((e: Error) => !cancelled && setError(e.message));
     return () => {

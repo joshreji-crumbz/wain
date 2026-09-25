@@ -5,7 +5,7 @@ import Image from "next/image";
 import GoogleMapView, { type MapMarker } from "./GoogleMapView";
 import { CloseIcon, SearchIcon } from "./icons";
 import type { SearchResult } from "@/lib/types";
-import { dishImage, isRtl, metres } from "./ui";
+import { Spinner, dishImage, isRtl, metres } from "./ui";
 
 export default function ExploreScreen({
   results,
@@ -18,6 +18,8 @@ export default function ExploreScreen({
   busy,
   origin,
   note,
+  onAreaSearch,
+  areaBusy,
 }: {
   results: SearchResult[];
   activeId: string | null;
@@ -29,6 +31,9 @@ export default function ExploreScreen({
   busy: boolean;
   origin: { lat: number; lng: number };
   note: string | null;
+  /** Dragging the map asks Google what food is in the new area. */
+  onAreaSearch: (area: { lat: number; lng: number; radius_m: number }) => void;
+  areaBusy: boolean;
 }) {
   const [full, setFull] = useState(false);
   const highlighted = results.find((r) => r.id === activeId) ?? null;
@@ -150,8 +155,14 @@ export default function ExploreScreen({
             activeId={activeId}
             onSelect={onHighlight}
             interactive
+            onAreaChanged={onAreaSearch}
             className="h-full w-full"
           />
+          {areaBusy && (
+            <span className="glass absolute left-1/2 top-4 flex -translate-x-1/2 items-center gap-2 rounded-full px-3 py-1.5 text-xs text-white">
+              <Spinner /> fetching this area…
+            </span>
+          )}
           <button
             onClick={() => setFull(false)}
             aria-label="Close map"

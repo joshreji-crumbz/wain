@@ -48,6 +48,15 @@ export type Saw = {
   item: { name_en: string; price_aed: number } | null;
 };
 
+/** Names an order button after the app it opens. */
+function orderName(url: string): string {
+  const host = url.match(/https?:\/\/(?:www\.)?([^/]+)/)?.[1] ?? "";
+  const app = ["talabat", "deliveroo", "noon", "careem", "zomato", "smiles"].find((p) =>
+    host.includes(p),
+  );
+  return app ? app[0].toUpperCase() + app.slice(1) : host;
+}
+
 function Action({
   href,
   icon,
@@ -83,6 +92,8 @@ export default function PlacePage({
   posts,
   mostOrdered,
   findingCreators,
+  liveMenu,
+  findingMenu,
   saw,
   onBack,
   onOtherBranches,
@@ -94,6 +105,9 @@ export default function PlacePage({
   posts: RankedPost[];
   mostOrdered: { dish: string; count: number } | null;
   findingCreators: boolean;
+  /** Menu read off the place's own pages, for places with no seeded menu. */
+  liveMenu: { items: MenuItem[]; source: string } | null;
+  findingMenu: boolean;
   saw: Saw | null;
   onBack: () => void;
   onOtherBranches?: () => void;
@@ -110,7 +124,17 @@ export default function PlacePage({
   };
 }) {
   const [fullMenu, setFullMenu] = useState(false);
-  const menu = useMemo(() => result.seed?.menu ?? [], [result.seed]);
+  const menu = useMemo(
+    () => (result.seed?.menu.length ? result.seed.menu : (liveMenu?.items ?? [])),
+    [result.seed, liveMenu],
+  );
+  const menuNote = result.seed?.menu.length
+    ? "sample menu"
+    : liveMenu?.source === "official site"
+      ? "from their website"
+      : liveMenu
+        ? "menu found on the web"
+        : "";
 
   const g = enrich?.google;
   const rating = result.rating ?? g?.rating ?? null;
@@ -120,6 +144,10 @@ export default function PlacePage({
     result.seed?.links.maps ||
     `https://www.google.com/maps/search/?api=1&query=${result.lat},${result.lng}`;
   const menuLink = enrich?.socials?.menu_links[0] || result.seed?.links.website || "";
+  // Delivery pages are the one link people actually want after the map.
+  const order = (enrich?.socials?.menu_links ?? []).filter((l) =>
+    /talabat|deliveroo|noon|careem|zomato|smiles/i.test(l),
+  );
   const instagram = enrich?.socials?.instagram || result.seed?.links.instagram || "";
   const website = g?.website || result.seed?.links.website || "";
   const phone = g?.phone ? `tel:${g.phone.replace(/\s/g, "")}` : "";
@@ -238,6 +266,22 @@ export default function PlacePage({
             />
           </div>
 
+          {order.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {order.map((l) => (
+                <a
+                  key={l}
+                  href={l}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-[#F2A23A]/40 bg-[#F2A23A]/10 px-3 py-1 text-xs text-[#F2A23A]"
+                >
+                  Order on {orderName(l)}
+                </a>
+              ))}
+            </div>
+          )}
+
           {otherBranches ? (
             <button
               onClick={onOtherBranches}
@@ -283,7 +327,14 @@ export default function PlacePage({
 
           <section className="mt-5">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-[15px] font-semibold">What to try</h2>
+              <h2 className="text-[15px] font-semibold">
+                What to try
+                {menuNote && (
+                  <span className="ml-2 text-[11px] font-normal text-[#A89F94]">
+                    {menuNote}
+                  </span>
+                )}
+              </h2>
               {menu.length > 0 && (
                 <button
                   onClick={() => setFullMenu((v) => !v)}
@@ -294,7 +345,11 @@ export default function PlacePage({
               )}
             </div>
 
-            {menu.length === 0 ? (
+            {menu.length === 0 && findingMenu ? (
+              <div className="glass mt-2 flex items-center gap-2 p-4 text-sm text-[#A89F94]">
+                <Spinner /> looking for their menu…
+              </div>
+            ) : menu.length === 0 ? (
               <button
                 onClick={() => chat.send("شو عندهم؟ what do you know about this place?")}
                 className="glass mt-2 flex w-full items-center justify-between p-4 text-left text-sm"

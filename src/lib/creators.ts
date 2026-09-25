@@ -24,3 +24,11 @@ export function isSocial(url: string): boolean {
   return h !== null && HOSTS.some((s) => h === s || h.endsWith(`.${s}`));
 }
 
+/**
+ * A profile page is not the post the user asked for, so an actual permalink
+ * ("/video/…", "/reel/…", "/p/…", "watch?v=…") always outranks one.
+ */
+export function isPermalink(url: string): boolean {
+  return /\/(?:video|reel|reels|p|shorts|status)\/|[?&]v=/i.test(url);
+}
+
