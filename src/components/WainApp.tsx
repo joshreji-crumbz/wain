@@ -52,7 +52,9 @@ export default function WainApp() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [dishes, setDishes] = useState<MenuItem[]>([]);
+  const [listening, setListening] = useState(false);
   const chatEnd = useRef<HTMLDivElement>(null);
+  const recognition = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     fetch("/api/places")
@@ -149,6 +151,34 @@ export default function WainApp() {
     if (!data) return;
     setMessages([...next, { role: "assistant", content: data.reply }]);
     setDishes(data.dishes);
+  }
+
+  function toggleMic() {
+    const Ctor =
+      (window as WindowWithSpeech).SpeechRecognition ??
+      (window as WindowWithSpeech).webkitSpeechRecognition;
+    if (!Ctor) {
+      setError("This browser has no built-in speech recognition. Type instead.");
+      return;
+    }
+    if (listening) {
+      recognition.current?.stop();
+      setListening(false);
+      return;
+    }
+    const rec = new Ctor();
+    rec.lang = register === "english" ? "en-AE" : "ar-AE";
+    rec.interimResults = false;
+    rec.onresult = (event) => {
+      const said = event.results[0][0].transcript;
+      setListening(false);
+      send(said);
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    recognition.current = rec;
+    rec.start();
+    setListening(true);
   }
 
   const acts: { id: Act; label: string }[] = [
@@ -460,6 +490,17 @@ export default function WainApp() {
                     placeholder="اكتب بالخليجي، Arabizi أو English…"
                     className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm"
                   />
+                  <button
+                    type="button"
+                    onClick={toggleMic}
+                    disabled={!active || !!busy}
+                    title="Ask by voice (ar-AE)"
+                    className={`rounded-lg px-3 py-2 text-sm ${
+                      listening ? "bg-rose-600 text-white" : "border border-zinc-300 text-zinc-600"
+                    } disabled:opacity-40`}
+                  >
+                    {listening ? "● rec" : "🎙"}
+                  </button>
                   <button
                     type="submit"
                     disabled={!active || !!busy}
