@@ -9,12 +9,29 @@ import type { Place } from "@/lib/types";
 const icon = (active: boolean) =>
   L.divIcon({
     className: "",
-    html: `<div style="width:18px;height:18px;border-radius:9999px;border:3px solid white;box-shadow:0 1px 6px rgba(0,0,0,.4);background:${
-      active ? "#e11d48" : "#0f766e"
+    html: `<div style="width:18px;height:18px;border-radius:9999px;border:3px solid #100d0b;box-shadow:0 1px 6px rgba(0,0,0,.4);background:${
+      active ? "#f59e0b" : "#a16207"
     }"></div>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9],
   });
+
+/**
+ * Venues inside the same mall share one entrance coordinate in the cached
+ * export, so pins would stack. Fan duplicates out far enough to stay separate
+ * tap targets at the initial zoom.
+ */
+function spread(places: Place[]): [number, number][] {
+  const seen = new Map<string, number>();
+  return places.map((p) => {
+    const key = `${p.lat},${p.lng}`;
+    const n = seen.get(key) ?? 0;
+    seen.set(key, n + 1);
+    if (n === 0) return [p.lat, p.lng];
+    const angle = (n * 2 * Math.PI) / 6;
+    return [p.lat + 0.0003 * Math.cos(angle), p.lng + 0.0003 * Math.sin(angle)];
+  });
+}
 
 function Recenter({ place }: { place: Place | null }) {
   const map = useMap();
@@ -34,6 +51,7 @@ export default function MapPanel({
   onSelect: (p: Place) => void;
 }) {
   const center: [number, number] = [24.5003, 54.3868];
+  const positions = spread(places);
   return (
     <MapContainer
       center={center}
@@ -41,15 +59,17 @@ export default function MapPanel({
       className="h-full w-full"
       scrollWheelZoom
     >
+      {/* Keyless dark basemaps all need a token, so darken OSM tiles instead. */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        className="[filter:invert(1)_hue-rotate(180deg)_brightness(0.85)_contrast(0.9)]"
       />
       <Recenter place={active} />
-      {places.map((p) => (
+      {places.map((p, i) => (
         <Marker
           key={p.id}
-          position={[p.lat, p.lng]}
+          position={positions[i]}
           icon={icon(active?.id === p.id)}
           eventHandlers={{ click: () => onSelect(p) }}
         >

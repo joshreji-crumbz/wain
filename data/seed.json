@@ -740,7 +740,7 @@
       "tags": {
         "family_section": true,
         "shisha": false,
-        "suhoor": true,
+        "suhoor": false,
         "iftar_deal": true,
         "halal": true,
         "alcohol": false,
