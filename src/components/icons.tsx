@@ -59,6 +59,15 @@ export function MicIcon(p: IconProps) {
   );
 }
 
+export function SpeakerIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 9v6h4l5 4V5L8 9z" />
+      <path d="M16.5 8.5a5 5 0 0 1 0 7" />
+    </Svg>
+  );
+}
+
 export function WaveIcon(p: IconProps) {
   return (
     <Svg {...p}>

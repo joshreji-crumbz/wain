@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
+import ChatBubble from "./ChatBubble";
 import { MicIcon, WaveIcon } from "./icons";
 import type { ChatMessage, MenuItem } from "@/lib/types";
 import { dishImage, isRtl } from "./ui";
@@ -13,6 +14,8 @@ export default function ChatDock({
   setInput,
   onSend,
   onMic,
+  onSpeak,
+  speaking,
   listening,
   busy,
   placeholder,
@@ -25,6 +28,9 @@ export default function ChatDock({
   setInput: (v: string) => void;
   onSend: (text: string) => void;
   onMic: () => void;
+  onSpeak: (text: string) => void;
+  /** The reply currently being read out loud, if any. */
+  speaking: string | null;
   listening: boolean;
   busy: boolean;
   placeholder: string;
@@ -42,17 +48,12 @@ export default function ChatDock({
       {!pinned && (
         <div className="space-y-2 pb-3">
           {messages.map((m, i) => (
-            <div
+            <ChatBubble
               key={i}
-              dir={isRtl(m.content) ? "rtl" : "ltr"}
-              className={`w-fit max-w-[85%] px-4 py-2.5 text-sm ${
-                m.role === "user"
-                  ? "ml-auto rounded-3xl rounded-br-md bg-[#F2A23A] text-black"
-                  : "glass rounded-3xl rounded-bl-md text-white"
-              }`}
-            >
-              {m.content}
-            </div>
+              message={m}
+              onSpeak={onSpeak}
+              speaking={speaking === m.content}
+            />
           ))}
           <div ref={end} />
         </div>
