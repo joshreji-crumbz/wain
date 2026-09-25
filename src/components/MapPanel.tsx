@@ -18,7 +18,8 @@ const icon = (active: boolean) =>
 
 /**
  * Venues inside the same mall share one entrance coordinate in the cached
- * export, so pins would stack. Fan duplicates out by a few metres.
+ * export, so pins would stack. Fan duplicates out far enough to stay separate
+ * tap targets at the initial zoom.
  */
 function spread(places: Place[]): [number, number][] {
   const seen = new Map<string, number>();
@@ -28,7 +29,7 @@ function spread(places: Place[]): [number, number][] {
     seen.set(key, n + 1);
     if (n === 0) return [p.lat, p.lng];
     const angle = (n * 2 * Math.PI) / 6;
-    return [p.lat + 0.00008 * Math.cos(angle), p.lng + 0.00008 * Math.sin(angle)];
+    return [p.lat + 0.0003 * Math.cos(angle), p.lng + 0.0003 * Math.sin(angle)];
   });
 }
 

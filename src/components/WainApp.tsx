@@ -89,7 +89,10 @@ export default function WainApp() {
         setLng(pos.coords.longitude.toFixed(5));
         setGpsStatus("using your GPS");
       },
-      () => setGpsStatus("GPS unavailable, using Al Maryah"),
+      () => {
+        if (manualGps.current) return;
+        setGpsStatus("GPS unavailable, using Al Maryah");
+      },
       { enableHighAccuracy: true, timeout: 8000 },
     );
   }, []);
