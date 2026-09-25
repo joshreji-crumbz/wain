@@ -123,19 +123,30 @@ export async function siteLinks(website: string): Promise<SiteLinks> {
   const instagram = first(/https?:\/\/(?:www\.)?instagram\.com\/[A-Za-z0-9_.]+/);
   const tiktok = first(/https?:\/\/(?:www\.)?tiktok\.com\/@[A-Za-z0-9_.]+/);
 
-  const hrefs = [...html.matchAll(/href=["']([^"']+)["']/gi)].map((m) => m[1]);
+  const hrefs = [...html.matchAll(/href=["']([^"']+)["']/gi)].map((m) =>
+    m[1].replace(/&amp;/g, "&"),
+  );
   const menu_links = [
     ...new Set(
       hrefs
-        .filter((h) => /menu|قائمة|deliveroo|talabat|zomato|\.pdf$/i.test(h))
         .map((h) => {
           try {
-            return new URL(h, website).toString();
+            return new URL(h, website);
           } catch {
-            return "";
+            return null;
           }
         })
-        .filter(Boolean),
+        .filter((u): u is URL => !!u && /^https?:$/.test(u.protocol))
+        // Page builders inline their own asset URLs, which often contain the
+        // word "menu"; only a human-facing page or PDF is a real menu link.
+        .filter((u) => !/\.(css|js|mjs|json|png|jpe?g|svg|woff2?)$/i.test(u.pathname))
+        .filter((u) => !/parastorage|gstatic|googleapis|cloudflare|wixstatic/i.test(u.hostname))
+        .filter(
+          (u) =>
+            /menu|قائمة|\.pdf$/i.test(u.pathname) ||
+            /deliveroo|talabat|zomato|noon|careem/i.test(u.hostname),
+        )
+        .map((u) => u.toString()),
     ),
   ].slice(0, 5);
 
