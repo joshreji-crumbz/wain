@@ -64,11 +64,14 @@ const STOP = new Set([
  */
 function namedLike(guess: string, name: string): boolean {
   if (sameName(guess, name)) return true;
-  const words = normaliseName(guess)
-    .split(" ")
-    .filter((w) => w.length >= 4 && !STOP.has(w));
-  const target = ` ${normaliseName(name)} `;
-  return words.length > 0 && words.some((w) => target.includes(` ${w}`));
+  const words = guess
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length >= 4 && !STOP.has(w))
+    .map(normaliseName)
+    .filter(Boolean);
+  const target = normaliseName(name);
+  return words.length > 0 && words.some((w) => target.includes(w));
 }
 
 /**
@@ -117,8 +120,16 @@ Pull the restaurant name as spoken (any spelling), the main dish, the price in A
 
   const hit = matchPlace(extraction.place_guess, places);
   // A loose fuzzy hit sends the user to the wrong restaurant, so only a
-  // confident name match counts as the reel's place.
-  const match = hit && (hit.method !== "fuzzy" || hit.score >= 0.7) ? hit : null;
+  // confident name match that shares a distinctive word counts as the reel's
+  // place.
+  const match =
+    hit &&
+    (hit.method !== "fuzzy" || hit.score >= 0.7) &&
+    [hit.matchedOn, hit.place.names.en, hit.place.names.ar].some((n) =>
+      namedLike(extraction.place_guess, n),
+    )
+      ? hit
+      : null;
 
   // What the reel points at is only useful if the user can open it, so the
   // place guess is searched near them the same way Explore does.

@@ -37,6 +37,55 @@ export function normaliseName(input: string): string {
   return s;
 }
 
+/**
+ * Words that every second venue carries, so they must not be what two names
+ * are judged similar on: "Ali Bhai Restaurant" fuzzy-matched Asha's purely
+ * through its @ashasrestaurants handle.
+ */
+const GENERIC = new Set([
+  "restaurant",
+  "restaurants",
+  "resto",
+  "cafe",
+  "cafes",
+  "caffe",
+  "coffee",
+  "kitchen",
+  "grill",
+  "grills",
+  "bbq",
+  "house",
+  "bar",
+  "lounge",
+  "bistro",
+  "eatery",
+  "food",
+  "foods",
+  "shop",
+  "official",
+  "uae",
+  "dubai",
+  "abudhabi",
+  "sharjah",
+  "the",
+  "and",
+  "by",
+  "مطعم",
+  "مطاعم",
+  "كافيه",
+  "مقهى",
+]);
+
+/** The part of a name that actually identifies the venue, normalised. */
+export function distinctive(name: string): string {
+  const words = name
+    .toLowerCase()
+    .replace(/[@_.]+/g, " ")
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w && !GENERIC.has(w));
+  return normaliseName(words.join(" "));
+}
+
 function variantsOf(place: Place): string[] {
   return [
     place.names.en,
@@ -95,16 +144,34 @@ export function matchPlace(query: string, candidates: Place[]): MatchResult {
     }
   }
 
-  const index = candidates.flatMap((place) =>
-    variantsOf(place).map((v) => ({ place, variant: v, key: normaliseName(v) })),
-  );
+  // Fuzzy matching only gets the distinctive part of each name; a shared
+  // "restaurant" or "cafe" is not evidence of anything.
+  const dq = distinctive(query);
+  if (!dq) return null;
+
+  // "Grand Beirut restaurant The Galleria Mall" is the branch printout of a
+  // seeded name, which survives once the generic words are gone.
+  for (const place of candidates) {
+    for (const v of variantsOf(place)) {
+      const dv = distinctive(v);
+      if (dv.length >= 6 && (dq === dv || dq.startsWith(dv) || dv.startsWith(dq))) {
+        return { place, score: 0.9, matchedOn: v, method: "normalised" };
+      }
+    }
+  }
+
+  const index = candidates
+    .flatMap((place) =>
+      variantsOf(place).map((v) => ({ place, variant: v, key: distinctive(v) })),
+    )
+    .filter((row) => row.key);
   const fuse = new Fuse(index, {
     keys: ["key"],
     includeScore: true,
     threshold: 0.45,
     ignoreLocation: true,
   });
-  const [best] = fuse.search(nq);
+  const [best] = fuse.search(dq);
   if (!best) return null;
   return {
     place: best.item.place,
