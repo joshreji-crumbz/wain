@@ -87,7 +87,7 @@ export default function HomeScreen({
           </span>
         </div>
 
-        <div className="mt-12">
+        <div className="mt-12 shrink-0">
           <h1 className="text-[44px] font-semibold leading-[1.05] text-white">
             See it.
             <br />
@@ -104,14 +104,15 @@ export default function HomeScreen({
         <div className="flex-1" />
 
         {outcome?.tier === "unclear" && (
-          <div className="glass mb-3 p-4 text-sm text-white">
+          <div className="glass mb-3 shrink-0 p-4 text-sm text-white">
             <p className="text-[#A89F94]">{outcome.evidence}</p>
             <p className="mt-1">{outcome.question}</p>
           </div>
         )}
 
         {outcome && outcome.tier !== "unclear" && outcome.results.length > 0 && (
-          <div className="mb-3 space-y-2">
+          // Results must never squeeze the actions out of the screen.
+          <div className="mb-3 max-h-[34vh] shrink-0 space-y-2 overflow-y-auto">
             <p className="px-1 text-xs text-[#A89F94]">{outcome.evidence}</p>
             {outcome.results.slice(0, 3).map((r) => (
               <button
@@ -128,7 +129,7 @@ export default function HomeScreen({
           </div>
         )}
 
-        <div className="glass flex overflow-hidden p-1">
+        <div className="glass flex shrink-0 overflow-hidden p-1">
           <label className="flex flex-1 cursor-pointer flex-col items-center gap-1.5 rounded-2xl py-3 text-[13px] font-medium text-white">
             <CameraIcon className="h-6 w-6 text-[#F2A23A]" />
             Camera
@@ -164,7 +165,7 @@ export default function HomeScreen({
             e.preventDefault();
             if (input.trim()) onAsk(input);
           }}
-          className="mt-3 flex items-center gap-2 rounded-full border border-[#F2A23A]/60 bg-black/40 px-4 py-2 shadow-[0_0_24px_rgba(242,162,58,0.25)] backdrop-blur"
+          className="mt-3 flex shrink-0 items-center gap-2 rounded-full border border-[#F2A23A]/60 bg-black/40 px-4 py-2 shadow-[0_0_24px_rgba(242,162,58,0.25)] backdrop-blur"
         >
           <WaveIcon className="h-5 w-5 text-[#F2A23A]" />
           <input
@@ -186,8 +187,8 @@ export default function HomeScreen({
           </button>
         </form>
 
-        <p className="mt-4 text-xs text-[#A89F94]">Try asking</p>
-        <div className="no-scrollbar -mx-5 mt-2 flex gap-2 overflow-x-auto px-5">
+        <p className="mt-4 shrink-0 text-xs text-[#A89F94]">Try asking</p>
+        <div className="no-scrollbar -mx-5 mt-2 flex shrink-0 gap-2 overflow-x-auto px-5">
           {CHIPS.map((c) => (
             <button
               key={c}
@@ -200,7 +201,7 @@ export default function HomeScreen({
           ))}
         </div>
 
-        <div className="mt-4 flex items-center justify-between text-[11px] text-[#A89F94]">
+        <div className="mt-4 flex shrink-0 items-center justify-between text-[11px] text-[#A89F94]">
           <span>{gpsStatus}</span>
           <button onClick={() => setShowManualGps(!showManualGps)} className="underline">
             set location
